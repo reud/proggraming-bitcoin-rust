@@ -1,10 +1,10 @@
 use std::fmt::{Display, Formatter};
 use std::fmt;
-use std::ops::Add;
-use std::process::Output;
+use std::ops::{Sub, Add, Mul, Rem};
+use num_traits::{NumOps, Num, One, Zero};
 
 // Debugの自動実装
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct FieldElement {
     num: u64,
     prime: u64
@@ -27,8 +27,83 @@ impl Add for FieldElement {
             num: (self.num+rhs.num).rem_euclid(self.prime)
         }
     }
-
 }
+
+impl Sub for FieldElement {
+    type Output = FieldElement;
+
+    fn sub(self, rhs: FieldElement) -> FieldElement {
+        Self::Output{
+            prime: self.prime,
+            num: ((self.num as i128) - (rhs.num as i128)).rem_euclid(self.prime as i128) as u64
+        }
+    }
+}
+
+impl Mul for FieldElement {
+    type Output = FieldElement;
+
+    fn mul(self, rhs: FieldElement) -> FieldElement {
+        Self::Output{
+            prime: self.prime,
+            num: ((self.num as i128) * (rhs.num as i128)).rem_euclid(self.prime as i128) as u64
+        }
+    }
+}
+
+impl Rem for FieldElement {
+    type Output = FieldElement;
+
+    fn rem(self, rhs: FieldElement) -> FieldElement {
+        Self::Output{
+            prime: self.prime,
+            num: ((self.num as i128) % (rhs.num as i128)).rem_euclid(self.prime as i128) as u64
+        }
+    }
+}
+
+impl One for FieldElement {
+    fn one() -> FieldElement {
+        FieldElement{
+            num: 1,
+            prime: u64::MAX,
+        }
+    }
+}
+
+impl Zero for FieldElement {
+    fn zero() -> FieldElement {
+        FieldElement{
+            num: 0,
+            prime: u64::MAX,
+        }
+    }
+    fn is_zero(&self) -> bool {
+        self.num == 0
+    }
+}
+
+// TODO: どうにかして実装したい。
+impl FieldElement {
+    fn inner_pow<T: Num>(self,n: T) -> FieldElement{
+        let x = 0;
+        if n == (x as Num) {
+            return FieldElement{
+                num: 1,
+                prime: self.prime
+            }
+        }
+        if n == 1 {
+
+        }
+    }
+    pub fn pow<T: Num>(self, rhs: T) -> FieldElement {
+        self.inner_pow(rhs)
+    }
+}
+
+
+
 
 impl Display for FieldElement {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -58,6 +133,7 @@ fn main() {
 
     // P.9 練習問題2
     {
+        println!("P.9 Q2");
         {
             let a = new_field_element(44,57);
             let b = new_field_element(33,57);
@@ -79,6 +155,63 @@ fn main() {
             let b = new_field_element(-30,57);
             let c = new_field_element(-38,57);
             println!("{}", a + b + c);
+        }
+    }
+
+    // P.10 練習問題3
+    {
+        println!("P.10 Q3");
+        {
+            let a = new_field_element(44,57);
+            let b = new_field_element(33,57);
+            println!("{}",a - b);
+        }
+        {
+            let a = new_field_element(9,57);
+            let b = new_field_element(-29,57);
+            println!("{}", a - b);
+        }
+        {
+            let a = new_field_element(17,57);
+            let b = new_field_element(42,57);
+            let c = new_field_element(49,57);
+            println!("{}", a + b - c);
+        }
+        {
+            let a = new_field_element(52,57);
+            let b = new_field_element(-30,57);
+            let c = new_field_element(-38,57);
+            println!("{}", a + b - c);
+        }
+    }
+
+    // P.11 練習問題4
+    {
+        println!("P.11 Q4");
+        {
+            let a = new_field_element(95,97);
+            let b = new_field_element(45,97);
+            let c = new_field_element(31,97);
+            println!("{}",a * b * c);
+        }
+        {
+            let a = new_field_element(17,97);
+            let b = new_field_element(39,97);
+            let c = new_field_element(19,97);
+            let d = new_field_element(44,97);
+            println!("{}", a * b * c * d);
+        }
+        {
+            let a = new_field_element(17,97);
+            let b = new_field_element(42,97);
+            let c = new_field_element(49,97);
+            println!("{}", a + b - c);
+        }
+        {
+            let a = new_field_element(52,97);
+            let b = new_field_element(-30,97);
+            let c = new_field_element(-38,97);
+            println!("{}", a + b - c);
         }
     }
 }
