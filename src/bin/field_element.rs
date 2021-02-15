@@ -62,43 +62,29 @@ impl Rem for FieldElement {
     }
 }
 
-impl One for FieldElement {
-    fn one() -> FieldElement {
-        FieldElement{
-            num: 1,
-            prime: u64::MAX,
-        }
-    }
-}
-
-impl Zero for FieldElement {
-    fn zero() -> FieldElement {
-        FieldElement{
-            num: 0,
-            prime: u64::MAX,
-        }
-    }
-    fn is_zero(&self) -> bool {
-        self.num == 0
-    }
-}
 
 // TODO: どうにかして実装したい。
 impl FieldElement {
-    fn inner_pow<T: Num>(self,n: T) -> FieldElement{
-        let x = 0;
-        if n == (x as Num) {
+    fn inner_pow(self,f: FieldElement,exp: u32) -> FieldElement {
+        if exp == 0 {
             return FieldElement{
                 num: 1,
-                prime: self.prime
+                prime: f.prime
             }
         }
-        if n == 1 {
-
+        if exp % 2 == 0 {
+            return self.inner_pow(FieldElement{
+                num: (f.num * f.num).rem_euclid(f.prime),
+                prime: f.prime,
+            },exp / 2);
         }
+        f * f.inner_pow(FieldElement{
+            num: (f.num * f.num).rem_euclid(f.prime),
+            prime: f.prime,
+        },(exp-1)/2)
     }
-    pub fn pow<T: Num>(self, rhs: T) -> FieldElement {
-        self.inner_pow(rhs)
+    pub fn pow(self, exp: u32) -> FieldElement {
+        self.inner_pow(self,exp)
     }
 }
 
@@ -196,22 +182,33 @@ fn main() {
         }
         {
             let a = new_field_element(17,97);
-            let b = new_field_element(39,97);
+            let b = new_field_element(13,97);
             let c = new_field_element(19,97);
             let d = new_field_element(44,97);
             println!("{}", a * b * c * d);
         }
         {
-            let a = new_field_element(17,97);
-            let b = new_field_element(42,97);
-            let c = new_field_element(49,97);
-            println!("{}", a + b - c);
+            let a = new_field_element(12,97).pow(7);
+            let b = new_field_element(77,97).pow(49);
+            println!("{}", a * b);
         }
-        {
-            let a = new_field_element(52,97);
-            let b = new_field_element(-30,97);
-            let c = new_field_element(-38,97);
-            println!("{}", a + b - c);
-        }
+    }
+
+    // P.11 練習問題5
+    {
+        println!("P.11 Q5");
+        let solver = |k: i32|{
+            print!("k = {{");
+            for i in 0..19 {
+                let f = new_field_element((i * k) as i64, 19);
+                print!(" {},",f)
+            }
+            print!("}} \n");
+        };
+        solver(1);
+        solver(3);
+        solver(7);
+        solver(17);
+        solver(18);
     }
 }
