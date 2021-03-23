@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::fmt;
-use std::ops::{Sub, Add, Mul, Rem};
+use std::ops::{Sub, Add, Mul, Rem, Div};
 use num_traits::{NumOps, Num, One, Zero};
 
 // Debugの自動実装
@@ -65,7 +65,7 @@ impl Rem for FieldElement {
 
 // TODO: どうにかして実装したい。
 impl FieldElement {
-    fn inner_pow(self,f: FieldElement,exp: u32) -> FieldElement {
+    fn inner_pow(self,f: FieldElement,exp: u64) -> FieldElement {
         if exp == 0 {
             return FieldElement{
                 num: 1,
@@ -83,13 +83,24 @@ impl FieldElement {
             prime: f.prime,
         },(exp-1)/2)
     }
-    pub fn pow(self, exp: u32) -> FieldElement {
-        self.inner_pow(self,exp)
+    // rem_euclidを使って負数でもよしなに整数値に変更する。
+    pub fn pow(self, exp: i64) -> FieldElement {
+        self.inner_pow(self, exp.rem_euclid((self.prime - 1) as i64) as u64)
+    }
+
+    // フェルマーの小定理からインバースを実装する。 位数が素数で無い場合は正しく動作しない
+    pub fn inv(self) -> FieldElement {
+        return self.pow((self.prime - 2) as i64)
     }
 }
 
+impl Div for FieldElement {
+    type Output = FieldElement;
 
-
+    fn div(self, rhs: Self) -> Self::Output {
+        return self * rhs.inv();
+    }
+}
 
 impl Display for FieldElement {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -115,7 +126,6 @@ fn main() {
         println!("{}",a == a);
         println!("{}",a != a);
     }
-
 
     // P.9 練習問題2
     {
@@ -210,5 +220,57 @@ fn main() {
         solver(7);
         solver(17);
         solver(18);
+    }
+
+    // P.12 練習問題6
+    {
+        println!("P.12 Q6");
+        let f = new_field_element((7 * 7),31);
+        println!("F31 7 * 7 = {}",f)
+    }
+
+    // P.13 練習問題7
+    {
+        println!("P.13 Q7");
+        let solver = |k: i32|{
+            print!("k = {} {{",k);
+            for i in 0..k-1 {
+                let f = new_field_element((i + 1) as i64, k as u64);
+                print!(" {},",f.pow((k - 1) as i64))
+            }
+            print!("}} \n");
+        };
+
+        solver(7);
+        solver(11);
+        solver(17);
+        solver(31);
+    }
+
+    // P.16 練習問題8
+    {
+        println!("P.16 練習問題");
+        {
+            let l = new_field_element(3,31);
+            let r = new_field_element(24,31);
+            println!("F31 3/24 = {}",l/r);
+        }
+        {
+            let l = new_field_element(17,31);
+            println!("F31 17^(-3) = {}",l.pow(-3));
+        }
+        {
+            let l = new_field_element(4,31);
+            println!("F31 4^(-4) * 11 = {}",l.pow(-4) * new_field_element(11,31));
+        }
+    }
+
+    // P.16 練習問題9
+    {
+        {
+            let l = new_field_element(3,31);
+            let r = new_field_element(24,31);
+            println!("F31 3/24 = {}",l/r);
+        }
     }
 }
