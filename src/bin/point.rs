@@ -1,10 +1,12 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 
 #[derive(Debug, Copy, Clone)]
 struct Point {
     x: i64,
     y: i64,
+    is_infinity: bool,
 }
 
 impl PartialEq for Point {
@@ -20,7 +22,19 @@ impl Display for Point {
 }
 
 fn new_point(x: i64, y: i64) -> Point {
-    return Point { x, y };
+    return Point {
+        x,
+        y,
+        is_infinity: false,
+    };
+}
+
+fn new_empty_point() -> Point {
+    return Point {
+        x: -1,
+        y: -1,
+        is_infinity: true,
+    };
 }
 
 #[derive(Debug, Clone)]
@@ -68,11 +82,39 @@ impl PartialEq for PointOnGraph {
     }
 }
 
+impl Add for PointOnGraph {
+    type Output = PointOnGraph;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        if self.point.is_infinity {
+            return rhs;
+        }
+
+        if rhs.point.is_infinity {
+            return self;
+        }
+
+        let x3 = (((rhs.point.y - self.point.y) * (rhs.point.y - self.point.y))
+            / ((rhs.point.x - self.point.x) * (rhs.point.x - self.point.x)))
+            - self.point.x
+            - rhs.point.x;
+        let y3 = ((rhs.point.y - self.point.y) * (self.point.x - x3)
+            / (rhs.point.x - self.point.x))
+            - rhs.point.y;
+        return new_point_on_graph(new_point(x3, y3), self.graph).unwrap();
+    }
+}
+
 fn new_point_on_graph(point: Point, graph: PlanarGraph) -> Result<PointOnGraph, &'static str> {
+    if point.is_infinity {
+        return Ok(PointOnGraph { graph, point });
+    }
+
     // 点がグラフ上にあること
     if (graph.lhs)(point.y) != (graph.rhs)(point.x) {
         return Err("point not on curve");
     }
+
     return Ok(PointOnGraph { graph, point });
 }
 
