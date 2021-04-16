@@ -8,3 +8,11 @@ edition = "2018"
 
 [dependencies]
 num-traits= "0.2.14"
+
+[[bin]]
+name = "fieldElement"
+path = "src/field_element.rs"
+
+[[bin]]
+name = "point"
+path = "src/point.rs"

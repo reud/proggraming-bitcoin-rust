@@ -105,6 +105,10 @@ impl Add for PointOnGraph {
 
         // 楕円曲線の座標が一致する時は接点の傾きを利用する。
         if self == rhs {
+            if self.point.y == 0 && rhs.point.y == 0 {
+                return new_point_on_graph(new_empty_point(),self.graph).unwrap();
+            }
+
             let b = (self.graph.rhs)(0);
             let a = (self.graph.rhs)(1) - 1 - b;
             let x = self.point.x as f64;
@@ -209,7 +213,7 @@ fn main() {
 
         println!("加法逆元の関係である、点a {}と 点b{} について、a + b は {}",a.point,b.point, sum.point)
     }
-    // P.37 練習問題4,5
+    // P.37,38 練習問題4,5
     {
         let g = new_planar_graph(
             |y| -> i64 { return y * y },
@@ -222,5 +226,17 @@ fn main() {
         let sum = a.clone() + b.clone();
 
         println!("点a {}と 点b{} について、a + b は {}",a.point,b.point, sum.point)
+    }
+    // P40 練習問題6,7
+    {
+        let g = new_planar_graph(
+            |y| -> i64 { return y * y },
+            |x| return x * x * x + 5 * x + 7,
+            "y^2=x^3+5x+7",
+        );
+        let a = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
+
+        let sum = a.clone() + a.clone();
+        println!("点a + 点a: {} = {}", a.point.clone(), sum.point);
     }
 }
