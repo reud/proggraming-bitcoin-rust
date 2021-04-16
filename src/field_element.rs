@@ -5,9 +5,9 @@ use num_traits::{NumOps, Num, One, Zero};
 
 // Debugの自動実装
 #[derive(Debug, Copy, Clone)]
-struct FieldElement {
-    num: u64,
-    prime: u64
+pub struct FieldElement {
+    pub num: u64,
+    pub prime: u64
 }
 
 // P.5 練習問題1
@@ -108,7 +108,7 @@ impl Display for FieldElement {
     }
 }
 
-fn new_field_element(num: i64, prime: u64) -> FieldElement {
+pub fn new_field_element(num: i64, prime: u64) -> FieldElement {
     FieldElement{
         num: num.rem_euclid(prime as i64) as u64,
         prime
