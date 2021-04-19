@@ -3,10 +3,10 @@ use crate::field_element;
 
 #[derive(Debug, Clone)]
 pub struct FieldPlanarGraph {
-    lhs: fn(y: field_element::FieldElement) -> field_element::FieldElement,
-    rhs: fn(x: field_element::FieldElement) -> field_element::FieldElement,
+    pub(crate) lhs: fn(y: field_element::FieldElement) -> field_element::FieldElement,
+    pub(crate) rhs: fn(x: field_element::FieldElement) -> field_element::FieldElement,
     field: u64,
-    expression: String, // 式(一致に利用する)
+    pub(crate) expression: String, // 式(一致に利用する)
 }
 
 impl FieldPlanarGraph {

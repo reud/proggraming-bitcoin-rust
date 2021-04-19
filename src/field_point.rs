@@ -1,13 +1,12 @@
 use crate::field_element;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use std::ops::{Add};
 
 #[derive(Debug, Copy, Clone)]
 pub struct FieldPoint {
     pub(crate) x: field_element::FieldElement,
     pub(crate) y: field_element::FieldElement,
-    is_infinity: bool,
+    pub(crate) is_infinity: bool,
 }
 
 impl PartialEq for FieldPoint {
