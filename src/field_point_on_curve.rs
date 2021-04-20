@@ -2,7 +2,7 @@ use crate::field_element;
 use crate::field_graph;
 use crate::field_graph::FieldPlanarGraph;
 use crate::field_point;
-use crate::field_point::{ new_point, FieldPoint};
+use crate::field_point::{new_point, FieldPoint, new_empty_point};
 use std::ops::Add;
 
 pub fn new_field_point_on_graph(
@@ -26,6 +26,28 @@ pub struct FieldPointOnGraph {
     pub graph: FieldPlanarGraph,
     pub point: FieldPoint,
 }
+
+impl FieldPointOnGraph {
+    fn inner_mul(self,f: FieldPointOnGraph,v: u128) -> FieldPointOnGraph {
+        let prime = self.point.x.prime;
+        if v == 0 {
+            return new_field_point_on_graph(new_empty_point(prime),self.graph).unwrap();
+        }
+        if v % 2 == 0 {
+            let cf = f.clone();
+            let half_res = self.inner_mul(f,v/2).clone();
+            let half_res2 = half_res.clone();
+            return half_res + half_res2;
+        }
+        let cf = f.clone();
+        f.clone() + f.inner_mul(cf,(v-1))
+    }
+    fn mul(self,v: u128) -> FieldPointOnGraph {
+        let this = self.clone();
+        self.inner_mul(this,v)
+    }
+}
+
 impl PartialEq for FieldPointOnGraph {
     fn eq(&self, other: &Self) -> bool {
         return self.point == other.point && self.graph == other.graph;
@@ -194,6 +216,149 @@ mod tests {
                 let sum = left_point_on_graph+right_point_on_graph;
                 assert_eq!(expected_point_on_graph,sum);
                 println!("F: {} 楕円曲線y^2 = x^3 + 7 上での 点{} + {} = {}",field,left_point,right_point,sum.point);
+            }
+        }
+    }
+
+    #[test]
+    fn test_mul() {
+        // P.52 練習問題4
+        let field = 223;
+        let lhs = |y: field_element::FieldElement| {
+            return y * y;
+        };
+        let rhs = |x: field_element::FieldElement| {
+            return x * x * x + field_element::new_field_element(7,x.prime);
+        };
+        let graph = new_field_planar_graph(lhs,rhs,field,"y^2 = x^3 + 7");
+
+        {
+            let x = field_element::new_field_element(192,223);
+            let y = field_element::new_field_element(105,223);
+            let p = field_point::new_point(x,y);
+            let g = graph.clone();
+            let gp = field_point_on_curve::new_field_point_on_graph(p,g)
+                .unwrap();
+            let gp = gp.mul(2);
+
+            let exp_x = field_element::new_field_element(49,223);
+            let exp_y = field_element::new_field_element(71,223);
+            let exp_p = field_point::new_point(exp_x,exp_y);
+            let g2 = graph.clone();
+            let exp_gp = field_point_on_curve::
+            new_field_point_on_graph(exp_p,g2).unwrap();
+            assert_eq!(gp,exp_gp);
+        }
+        {
+            let x = field_element::new_field_element(143,223);
+            let y = field_element::new_field_element(98,223);
+            let p = field_point::new_point(x,y);
+            let g = graph.clone();
+            let gp = field_point_on_curve::new_field_point_on_graph(p,g)
+                .unwrap();
+            let gp = gp.mul(2);
+
+            let exp_x = field_element::new_field_element(64,223);
+            let exp_y = field_element::new_field_element(168,223);
+            let exp_p = field_point::new_point(exp_x,exp_y);
+            let g2 = graph.clone();
+            let exp_gp = field_point_on_curve::
+            new_field_point_on_graph(exp_p,g2).unwrap();
+            assert_eq!(gp,exp_gp);
+        }
+        {
+            let x = field_element::new_field_element(47,223);
+            let y = field_element::new_field_element(71,223);
+            let p = field_point::new_point(x,y);
+            let g = graph.clone();
+            let gp = field_point_on_curve::new_field_point_on_graph(p,g)
+                .unwrap();
+            let gp = gp.mul(2);
+
+            let exp_x = field_element::new_field_element(36,223);
+            let exp_y = field_element::new_field_element(111,223);
+            let exp_p = field_point::new_point(exp_x,exp_y);
+            let g2 = graph.clone();
+            let exp_gp = field_point_on_curve::
+            new_field_point_on_graph(exp_p,g2).unwrap();
+            assert_eq!(gp,exp_gp);
+        }
+        {
+            let x = field_element::new_field_element(47,223);
+            let y = field_element::new_field_element(71,223);
+            let p = field_point::new_point(x,y);
+            let g = graph.clone();
+            let gp = field_point_on_curve::new_field_point_on_graph(p,g)
+                .unwrap();
+            let gp = gp.mul(4);
+
+            let exp_x = field_element::new_field_element(194,223);
+            let exp_y = field_element::new_field_element(51,223);
+            let exp_p = field_point::new_point(exp_x,exp_y);
+            let g2 = graph.clone();
+            let exp_gp = field_point_on_curve::
+            new_field_point_on_graph(exp_p,g2).unwrap();
+            assert_eq!(gp,exp_gp);
+        }
+        {
+            let x = field_element::new_field_element(47,223);
+            let y = field_element::new_field_element(71,223);
+            let p = field_point::new_point(x,y);
+            let g = graph.clone();
+            let gp = field_point_on_curve::new_field_point_on_graph(p,g)
+                .unwrap();
+            let gp = gp.mul(8);
+
+            let exp_x = field_element::new_field_element(116,223);
+            let exp_y = field_element::new_field_element(55,223);
+            let exp_p = field_point::new_point(exp_x,exp_y);
+            let g2 = graph.clone();
+            let exp_gp = field_point_on_curve::
+            new_field_point_on_graph(exp_p,g2).unwrap();
+            assert_eq!(gp,exp_gp);
+        }
+        for i in 1..22 {
+            let x = field_element::new_field_element(47,223);
+            let y = field_element::new_field_element(71,223);
+            let p = field_point::new_point(x,y);
+            let g = graph.clone();
+            let gp = field_point_on_curve::new_field_point_on_graph(p,g)
+                .unwrap();
+            let gp = gp.mul(i);
+            println!("{}: {}",i,gp.point);
+        }
+        {
+            let x = field_element::new_field_element(47,223);
+            let y = field_element::new_field_element(71,223);
+            let p = field_point::new_point(x,y);
+            let g = graph.clone();
+            let gp = field_point_on_curve::new_field_point_on_graph(p,g)
+                .unwrap();
+            let gp = gp.mul(21);
+
+            let exp_p = field_point::new_empty_point(223);
+            let g2 = graph.clone();
+            let exp_gp = field_point_on_curve::
+            new_field_point_on_graph(exp_p,g2).unwrap();
+            assert_eq!(gp,exp_gp);
+        }
+        // P.58 練習問題5
+        for i in 1..223 {
+            let x = field_element::new_field_element(15,223);
+            let y = field_element::new_field_element(86,223);
+            let p = field_point::new_point(x,y);
+            let g = graph.clone();
+            let gp = field_point_on_curve::new_field_point_on_graph(p,g)
+                .unwrap();
+            let gp = gp.mul(i);
+
+            let exp_p = field_point::new_empty_point(223);
+            let g2 = graph.clone();
+            let exp_gp = field_point_on_curve::
+            new_field_point_on_graph(exp_p,g2).unwrap();
+            if gp == exp_gp {
+                println!("{}回の乗算で無限遠点に。　位数は{}", i-1, i);
+                break;
             }
         }
     }
