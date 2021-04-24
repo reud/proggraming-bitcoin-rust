@@ -1,5 +1,5 @@
-use crate::field_point;
-use crate::field_element;
+use crate::ecc::field_point;
+use crate::ecc::field_element;
 
 #[derive(Debug, Clone)]
 pub struct FieldPlanarGraph {
@@ -45,8 +45,8 @@ pub fn new_field_planar_graph(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::field_graph::new_field_planar_graph;
-    use crate::{field_point_on_curve, field_graph};
+
+    use crate::ecc::{field_graph};
 
     #[test]
     fn test_on_curve() {

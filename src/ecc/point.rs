@@ -147,96 +147,104 @@ fn new_point_on_graph(point: Point, graph: PlanarGraph) -> Result<PointOnGraph, 
     return Ok(PointOnGraph { graph, point });
 }
 
-fn main() {
-    // P.28 練習問題1
-    {
-        println!("P.28 Q1");
-        let g = new_planar_graph(
-            |y| -> i64 { return y * y },
-            |x| return x * x * x + 5 * x + 7,
-            "y^2=x^3+5x+7",
-        );
+#[cfg(test)]
+mod tests {
+    extern crate test;
+    use super::*;
 
-        let a = new_point_on_graph(new_point(2, 4), g.clone());
-        match a {
-            Ok(v) => {
-                println!("グラフ: {} 上に 点{}", v.graph.expression, v.point)
+    #[test]
+    fn test_point_all() {
+        // P.28 練習問題1
+        {
+            println!("P.28 Q1");
+            let g = new_planar_graph(
+                |y| -> i64 { return y * y },
+                |x| return x * x * x + 5 * x + 7,
+                "y^2=x^3+5x+7",
+            );
+
+            let a = new_point_on_graph(new_point(2, 4), g.clone());
+            match a {
+                Ok(v) => {
+                    println!("グラフ: {} 上に 点{}", v.graph.expression, v.point)
+                }
+                Err(_e) => {}
             }
-            Err(_e) => {}
-        }
-        let b = new_point_on_graph(new_point(-1, -1), g.clone());
-        match b {
-            Ok(v) => {
-                println!("グラフ: {} 上に 点{}", v.graph.expression, v.point)
+            let b = new_point_on_graph(new_point(-1, -1), g.clone());
+            match b {
+                Ok(v) => {
+                    println!("グラフ: {} 上に 点{}", v.graph.expression, v.point)
+                }
+                Err(_e) => {}
             }
-            Err(_e) => {}
-        }
 
-        let c = new_point_on_graph(new_point(18, 77), g.clone());
-        match c {
-            Ok(v) => {
-                println!("グラフ: {} 上に 点{}", v.graph.expression, v.point)
+            let c = new_point_on_graph(new_point(18, 77), g.clone());
+            match c {
+                Ok(v) => {
+                    println!("グラフ: {} 上に 点{}", v.graph.expression, v.point)
+                }
+                Err(_e) => {}
             }
-            Err(_e) => {}
-        }
-        let d = new_point_on_graph(new_point(5, 7), g);
-        match d {
-            Ok(v) => {
-                println!("グラフ: {} 上に 点{}", v.graph.expression, v.point)
+            let d = new_point_on_graph(new_point(5, 7), g);
+            match d {
+                Ok(v) => {
+                    println!("グラフ: {} 上に 点{}", v.graph.expression, v.point)
+                }
+                Err(_e) => {}
             }
-            Err(_e) => {}
         }
-    }
-    // P.28 練習問題2
-    {
-        let g = new_planar_graph(
-            |y| -> i64 { return y * y },
-            |x| return x * x * x + 5 * x + 7,
-            "y^2=x^3+5x+7",
-        );
-        let a = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
-        let b = new_point_on_graph(new_point(18, 77), g.clone()).unwrap();
+        // P.28 練習問題2
+        {
+            let g = new_planar_graph(
+                |y| -> i64 { return y * y },
+                |x| return x * x * x + 5 * x + 7,
+                "y^2=x^3+5x+7",
+            );
+            let a = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
+            let b = new_point_on_graph(new_point(18, 77), g.clone()).unwrap();
 
-        println!("点a {}と点b {} について、a != b は {}",a.point,b.point, a != b)
-    }
-    // P.35  練習問題3
-    {
-        let g = new_planar_graph(
-            |y| -> i64 { return y * y },
-            |x| return x * x * x + 5 * x + 7,
-            "y^2=x^3+5x+7",
-        );
-        let a = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
-        let b = new_point_on_graph(new_point(-1, 1), g.clone()).unwrap();
+            println!("点a {}と点b {} について、a != b は {}",a.point,b.point, a != b)
+        }
+        // P.35  練習問題3
+        {
+            let g = new_planar_graph(
+                |y| -> i64 { return y * y },
+                |x| return x * x * x + 5 * x + 7,
+                "y^2=x^3+5x+7",
+            );
+            let a = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
+            let b = new_point_on_graph(new_point(-1, 1), g.clone()).unwrap();
 
-        let sum = a.clone() + b.clone();
+            let sum = a.clone() + b.clone();
 
-        println!("加法逆元の関係である、点a {}と 点b{} について、a + b は {}",a.point,b.point, sum.point)
-    }
-    // P.37,38 練習問題4,5
-    {
-        let g = new_planar_graph(
-            |y| -> i64 { return y * y },
-            |x| return x * x * x + 5 * x + 7,
-            "y^2=x^3+5x+7",
-        );
-        let a = new_point_on_graph(new_point(2, 5), g.clone()).unwrap();
-        let b = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
+            println!("加法逆元の関係である、点a {}と 点b{} について、a + b は {}",a.point,b.point, sum.point)
+        }
+        // P.37,38 練習問題4,5
+        {
+            let g = new_planar_graph(
+                |y| -> i64 { return y * y },
+                |x| return x * x * x + 5 * x + 7,
+                "y^2=x^3+5x+7",
+            );
+            let a = new_point_on_graph(new_point(2, 5), g.clone()).unwrap();
+            let b = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
 
-        let sum = a.clone() + b.clone();
+            let sum = a.clone() + b.clone();
 
-        println!("点a {}と 点b{} について、a + b は {}",a.point,b.point, sum.point)
-    }
-    // P40 練習問題6,7
-    {
-        let g = new_planar_graph(
-            |y| -> i64 { return y * y },
-            |x| return x * x * x + 5 * x + 7,
-            "y^2=x^3+5x+7",
-        );
-        let a = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
+            println!("点a {}と 点b{} について、a + b は {}",a.point,b.point, sum.point)
+        }
+        // P40 練習問題6,7
+        {
+            let g = new_planar_graph(
+                |y| -> i64 { return y * y },
+                |x| return x * x * x + 5 * x + 7,
+                "y^2=x^3+5x+7",
+            );
+            let a = new_point_on_graph(new_point(-1, -1), g.clone()).unwrap();
 
-        let sum = a.clone() + a.clone();
-        println!("点a + 点a: {} = {}", a.point.clone(), sum.point);
+            let sum = a.clone() + a.clone();
+            println!("点a + 点a: {} = {}", a.point.clone(), sum.point);
+        }
     }
 }
+

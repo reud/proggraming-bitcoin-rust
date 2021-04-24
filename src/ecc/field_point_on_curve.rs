@@ -1,8 +1,8 @@
-use crate::field_element;
-use crate::field_graph;
-use crate::field_graph::FieldPlanarGraph;
-use crate::field_point;
-use crate::field_point::{new_empty_point, new_point, FieldPoint};
+use crate::ecc::field_element;
+use crate::ecc::field_graph;
+use crate::ecc::field_graph::FieldPlanarGraph;
+use crate::ecc::field_point;
+use crate::ecc::field_point::{new_empty_point, new_point, FieldPoint};
 use std::ops::Add;
 
 pub fn add_two(a: i32) -> i32 {
@@ -38,7 +38,6 @@ impl FieldPointOnGraph {
             return new_field_point_on_graph(new_empty_point(prime), self.graph).unwrap();
         }
         if v % 2 == 0 {
-            let cf = f.clone();
             let half_res = self.inner_mul(f, v / 2).clone();
             let half_res2 = half_res.clone();
             return half_res + half_res2;
@@ -121,8 +120,8 @@ impl Add for FieldPointOnGraph {
 mod tests {
     extern crate test;
     use super::*;
-    use crate::field_graph::new_field_planar_graph;
-    use crate::field_point_on_curve;
+    use crate::ecc::field_graph::new_field_planar_graph;
+    use crate::ecc::field_point_on_curve;
     use test::Bencher;
 
     #[test]

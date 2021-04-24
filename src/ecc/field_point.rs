@@ -1,4 +1,4 @@
-use crate::field_element;
+use crate::ecc::field_element;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
