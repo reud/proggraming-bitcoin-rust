@@ -2,11 +2,13 @@ use std::fmt::{Display, Formatter};
 use std::fmt;
 use std::ops::{Sub, Add, Mul, Rem, Div};
 use num_bigint::BigUint;
-use num_traits::{One, FromPrimitive};
+use num_traits::{One, FromPrimitive, Zero};
 
-const PRIME: BigUint = BigUint::from_u8(2u8).unwrap().pow(256)
-    - BigUint::from_u8(2u8).unwrap().pow(32u32)
-    - (BigUint::from(1u8) * 977u32);
+fn prime() -> BigUint {
+    return BigUint::from(2u32).pow(256)
+        - BigUint::from_u8(2u8).unwrap().pow(32u32)
+        - (BigUint::from(1u8) * 977u32)
+}
 
 // Sec256k1Elementと共通化したい・・・
 // Debugの自動実装
@@ -28,7 +30,7 @@ impl Add for Sec256k1Element {
     // 左側のprimeに依存させる。
     fn add(self, rhs: Sec256k1Element) -> Sec256k1Element {
         Self::Output{
-            num: (self.num+rhs.num) % PRIME
+            num: (self.num+rhs.num) % prime()
         }
     }
 }
@@ -38,7 +40,7 @@ impl Sub for Sec256k1Element {
 
     fn sub(self, rhs: Sec256k1Element) -> Sec256k1Element {
         Self::Output{
-            num: (self.num  - rhs.num) % PRIME
+            num: (self.num  - rhs.num) % prime()
         }
     }
 }
@@ -48,7 +50,7 @@ impl Mul for Sec256k1Element {
 
     fn mul(self, rhs: Sec256k1Element) -> Sec256k1Element {
         Self::Output{
-            num: (self.num * rhs.num) % PRIME
+            num: (self.num * rhs.num) % prime()
         }
     }
 }
@@ -58,7 +60,7 @@ impl Rem for Sec256k1Element {
 
     fn rem(self, rhs: Sec256k1Element) -> Sec256k1Element {
         Self::Output{
-            num: (self.num % rhs.num) % PRIME
+            num: (self.num % rhs.num) % prime()
         }
     }
 }
@@ -66,29 +68,29 @@ impl Rem for Sec256k1Element {
 
 // TODO: どうにかして実装したい。
 impl Sec256k1Element {
-    fn inner_pow(self,f: Sec256k1Element,exp: u64) -> Sec256k1Element {
-        if exp == 0 {
+    fn inner_pow(self,f: Sec256k1Element,exp: BigUint) -> Sec256k1Element {
+        if exp.clone() == BigUint::zero() {
             return Sec256k1Element{
                 num: One::one(),
             }
         }
-        if exp % 2 == 0 {
+        if exp.clone() % BigUint::from(2u32) == BigUint::zero() {
             return self.inner_pow(Sec256k1Element{
-                num: (f.num.clone() * f.num.clone()) % PRIME,
-            },exp / 2);
+                num: (f.num.clone() * f.num.clone()) % prime(),
+            },exp.clone() / BigUint::from(2u32));
         }
-        f * f.inner_pow(Sec256k1Element{
-            num: (f.num.clone() * f.num.clone()) % PRIME,
-        },(exp-1)/2)
+        f.clone() * f.clone().inner_pow(Sec256k1Element{
+            num: (f.num.clone() * f.num.clone()) % prime(),
+        },(exp.clone()-BigUint::one())/BigUint::from(2u32))
     }
     // rem_euclidを使って負数でもよしなに整数値に変更する。
     pub fn pow(self, exp: BigUint) -> Sec256k1Element {
-        self.inner_pow(self, exp % (PRIME - 1))
+        self.clone().inner_pow(self, exp % (prime() - BigUint::one()))
     }
 
     // フェルマーの小定理からインバースを実装する。 位数が素数で無い場合は正しく動作しない
     pub fn inv(self) -> Sec256k1Element {
-        return self.pow(PRIME - 2)
+        return self.pow(prime() - BigUint::from(2u32))
     }
 }
 
@@ -108,6 +110,34 @@ impl Display for Sec256k1Element {
 
 pub fn new_field_element(num: BigUint) -> Sec256k1Element {
     Sec256k1Element{
-        num: num % PRIME
+        num: num % prime()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    extern crate test;
+    use super::*;
+
+    #[test]
+    fn test_field_element_all() {
+        {
+            let a = new_field_element(BigUint::from(7u32));
+            let b = new_field_element(BigUint::from(12u32));
+
+            println!("{}",a == b);
+            println!("a + b = {}",a.clone() + b.clone());
+            println!("a % b = {}",a.clone() % b.clone());
+        }
+        {
+            let a = new_field_element(prime() - BigUint::one());
+            let b = new_field_element(BigUint::from(12u32));
+
+            println!("{}",a == b);
+            println!("{}",a);
+            println!("a + b = {}",a.clone() + b.clone());
+            println!("a % b = {}",a.clone() % b.clone());
+        }
+    }
+}
+
