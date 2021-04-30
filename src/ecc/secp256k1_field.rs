@@ -108,9 +108,15 @@ impl Display for Sec256k1Element {
     }
 }
 
-pub fn new_field_element(num: BigUint) -> Sec256k1Element {
+pub fn new_secp256k1element(num: BigUint) -> Sec256k1Element {
     Sec256k1Element{
         num: num % prime()
+    }
+}
+
+pub fn new_secp256k1element_from_i32(num: i32) -> Sec256k1Element {
+    Sec256k1Element{
+        num: BigUint::from_i32(num).unwrap(),
     }
 }
 
@@ -120,18 +126,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_field_element_all() {
+    fn test_secp256k1_field() {
         {
-            let a = new_field_element(BigUint::from(7u32));
-            let b = new_field_element(BigUint::from(12u32));
-
-            println!("{}",a == b);
-            println!("a + b = {}",a.clone() + b.clone());
-            println!("a % b = {}",a.clone() % b.clone());
+            let a = new_secp256k1element(BigUint::from(7u32));
+            let b = new_secp256k1element(BigUint::from(12u32));
+            let c = new_secp256k1element(BigUint::from(19u32));
+            let d = new_secp256k1element(BigUint::from(5u32));
+            assert_ne!(a,b);
+            assert_eq!((a.clone() + b.clone()),c.clone());
+            assert_eq!((c.clone() % a.clone()),d.clone());
         }
         {
-            let a = new_field_element(prime() - BigUint::one());
-            let b = new_field_element(BigUint::from(12u32));
+            let a = new_secp256k1element(prime() - BigUint::one());
+            let b = new_secp256k1element(BigUint::from(12u32));
 
             println!("{}",a == b);
             println!("{}",a);
