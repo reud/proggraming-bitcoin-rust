@@ -6,4 +6,5 @@ pub mod field_point;
 mod secp256k1_field;
 mod secp256k1_point;
 mod secp256k1_curve;
+mod secp256k1_scalar_element;
 

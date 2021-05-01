@@ -5,7 +5,8 @@ use num_bigint::BigUint;
 use num_traits::{FromPrimitive, Num, Zero, One};
 use crate::ecc::secp256k1_curve::{Secp256k1Curve, new_secp256k1curve};
 use std::ops::{Add, Rem, Div};
-use crate::ecc::field_point_on_curve::FieldPointOnGraph;
+
+use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 
 fn prime() -> BigUint {
     return BigUint::from(2u32).pow(256)
@@ -35,6 +36,7 @@ impl PartialEq for Secp256k1Point {
 
 impl Secp256k1Point {
     fn inner_mul(self, f: Secp256k1Point, v: BigUint) -> Secp256k1Point {
+        println!("nowf: {} now: {}",f,v);
         if v == BigUint::zero() {
             return new_secp256k1point_infinity();
         }
@@ -44,7 +46,7 @@ impl Secp256k1Point {
             return half_res + half_res2;
         }
         let cf = f.clone();
-        f.clone() + f.inner_mul(cf, v - BigUint::one())
+        f.clone() + f.clone().inner_mul(cf, v - BigUint::one())
     }
     fn mul_from_u64(self, v: u64) -> Secp256k1Point {
         let this = self.clone();
@@ -61,6 +63,10 @@ impl Secp256k1Point {
     fn mul_from_big_uint(self, v: BigUint) -> Secp256k1Point {
         let this = self.clone();
         self.inner_mul(this, v)
+    }
+    fn mul_from_sec256k1scalar_element(self, v: Secp256k1ScalarElement) -> Secp256k1Point {
+        let this = self.clone();
+        self.inner_mul(this, v.num)
     }
 }
 
@@ -168,7 +174,7 @@ fn new_secp256k1point_from_big_uint(x: BigUint,y: BigUint) -> Secp256k1Point {
     return Secp256k1Point {
         x,
         y,
-        is_infinity: true,
+        is_infinity: false,
         curve: new_secp256k1curve()
     }
 }
@@ -198,6 +204,17 @@ fn new_secp256k1point_g() -> Secp256k1Point {
     return new_secp256k1point_from_big_uint(x,y);
 }
 
+fn new_secp256k1point_from_hex_str(x: &str,y: &str) -> Option<Secp256k1Point> {
+    let x = BigUint::from_str_radix(x,16);
+    if x.is_err() {
+        return None;
+    }
+    let y = BigUint::from_str_radix(y,16);
+    if y.is_err() {
+        return None;
+    }
+    Some(new_secp256k1point_from_big_uint(x.unwrap(),y.unwrap()))
+}
 
 
 
@@ -205,6 +222,8 @@ fn new_secp256k1point_g() -> Secp256k1Point {
 mod tests {
     extern crate test;
     use super::*;
+    use crate::ecc::secp256k1_field::{new_secp256k1element_from_hex_str};
+    use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement_from_hex_str;
 
     #[test]
     fn test_base_point() {
@@ -212,5 +231,45 @@ mod tests {
         let base = new_secp256k1point_g();
         let n = BigUint::from_str_radix("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16).unwrap();
         assert_eq!(new_secp256k1point_infinity(),base.mul_from_big_uint(n));
+    }
+
+    #[test]
+    fn test_signature_practice_p69q6() {
+
+        {
+            // signature 1
+            let px = "887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c";
+            let py = "61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34";
+            let p = new_secp256k1point_from_hex_str(px,py).unwrap();
+            let z = new_secp256k1scalarelement_from_hex_str("ec208baa0fc1c19f708a9ca96fdeff3ac3f230bb4a7ba4aede4942ad003c0f60").unwrap();
+            let r = new_secp256k1scalarelement_from_hex_str("ac8d1c87e51d0d441be8b3dd5b05c8795b48875dffe00b7ffcfac23010d3a395").unwrap();
+            let s = new_secp256k1scalarelement_from_hex_str("68342ceff8935ededd102dd876ffd6ba72d6a427a3edb13d26eb0781cb423c4").unwrap();
+
+            let u = z.clone()/s.clone();
+            let v= r.clone()/s.clone();
+            let g = new_secp256k1point_g();
+            let ug = g.clone().mul_from_sec256k1scalar_element(u.clone());
+            let vp = p.clone().mul_from_sec256k1scalar_element(v.clone());
+            let r_point = ug.clone() + vp.clone();
+            println!("u: {} v: {} r_point: {} g: {} p: {} ug: {} vp: {}",u.clone(),v.clone(),r_point.clone(),g.clone(),p.clone(),ug,vp);
+            // Rxとrが一致していれば署名は有効
+            assert_eq!(r_point.x.num,r.num);
+        }
+        {
+            // signature 1
+            let px = "887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c";
+            let py = "61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34";
+            let p = new_secp256k1point_from_hex_str(px,py).unwrap();
+            let z = new_secp256k1scalarelement_from_hex_str("7c076ff316692a3d7eb3c3bb0f8b1488cf72e1afcd929e29307032997a838a3d").unwrap();
+            let r = new_secp256k1scalarelement_from_hex_str("eff69ef2b1bd93a66ed5219add4fb51e11a840f404876325a1e8ffe0529a2c").unwrap();
+            let s = new_secp256k1scalarelement_from_hex_str("c7207fee197d27c618aea621406f6bf5ef6fca38681d82b2f06fddbdce6feab6").unwrap();
+
+            let u = z.clone()/s.clone();
+            let v= r.clone()/s.clone();
+            let g = new_secp256k1point_g();
+            let r_point = g.mul_from_sec256k1scalar_element(u) + p.mul_from_sec256k1scalar_element(v);
+            // Rxとrが一致していれば署名は有効
+            assert_eq!(r_point.x.num,r.num);
+        }
     }
 }
