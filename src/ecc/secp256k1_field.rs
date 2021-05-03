@@ -10,9 +10,6 @@ fn prime() -> BigUint {
         - (BigUint::from(1u8) * 977u32)
 }
 
-fn base_point_prime() -> BigUint {
-    return BigUint::from_str_radix("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",16).unwrap()
-}
 
 // Sec256k1Elementと共通化したい・・・
 // Debugの自動実装
@@ -112,18 +109,20 @@ impl Display for Sec256k1Element {
     }
 }
 
+#[allow(dead_code)]
 pub fn new_secp256k1element(num: BigUint) -> Sec256k1Element {
     Sec256k1Element{
         num: num % prime()
     }
 }
-
+#[allow(dead_code)]
 pub fn new_secp256k1element_from_i32(num: i32) -> Sec256k1Element {
     Sec256k1Element{
         num: BigUint::from_i32(num).unwrap(),
     }
 }
 
+#[allow(dead_code)]
 pub fn new_secp256k1element_from_hex_str(hex: &str) -> Option<Sec256k1Element> {
     let hex = BigUint::from_str_radix(hex,16);
     if hex.is_err() {

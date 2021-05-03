@@ -117,6 +117,12 @@ pub fn new_secp256k1scalarelement_from_i32(num: i32) -> Secp256k1ScalarElement {
     }
 }
 
+pub fn new_secp256k1scalarelement_from_u64(num: u64) -> Secp256k1ScalarElement {
+    Secp256k1ScalarElement{
+        num: BigUint::from_u64(num).unwrap(),
+    }
+}
+
 pub fn new_secp256k1scalarelement_from_hex_str(hex: &str) -> Option<Secp256k1ScalarElement> {
     let hex = BigUint::from_str_radix(hex,16);
     if hex.is_err() {

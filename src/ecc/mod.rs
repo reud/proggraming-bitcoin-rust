@@ -7,4 +7,6 @@ mod secp256k1_field;
 mod secp256k1_point;
 mod secp256k1_curve;
 mod secp256k1_scalar_element;
+mod secp256k1_signature;
+mod secp256k1_privatekey;
 

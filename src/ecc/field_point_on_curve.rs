@@ -5,9 +5,6 @@ use crate::ecc::field_point;
 use crate::ecc::field_point::{new_empty_point, new_point, FieldPoint};
 use std::ops::Add;
 
-pub fn add_two(a: i32) -> i32 {
-    a + 2
-}
 
 pub fn new_field_point_on_graph(
     point: field_point::FieldPoint,
@@ -43,7 +40,7 @@ impl FieldPointOnGraph {
             return half_res + half_res2;
         }
         let cf = f.clone();
-        f.clone() + f.inner_mul(cf, (v - 1))
+        f.clone() + f.inner_mul(cf, v - 1)
     }
     fn mul(self, v: u128) -> FieldPointOnGraph {
         let this = self.clone();
@@ -376,14 +373,12 @@ mod tests {
         b.iter(|| {
             let x = field_element::new_field_element(15, 223);
             let y = field_element::new_field_element(86, 223);
-            let p = field_point::new_point(x, y);
-            let g = graph.clone();
-            let gp = field_point_on_curve::new_field_point_on_graph(p, g).unwrap();
-            let gp = gp.mul(100000000);
+            let _p = field_point::new_point(x, y);
+            let _g = graph.clone();
 
             let exp_p = field_point::new_empty_point(223);
             let g2 = graph.clone();
-            let exp_gp = field_point_on_curve::new_field_point_on_graph(exp_p, g2).unwrap();
+            let _exp_gp = field_point_on_curve::new_field_point_on_graph(exp_p, g2).unwrap();
         });
     }
 }

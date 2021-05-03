@@ -48,6 +48,7 @@ struct PlanarGraph {
 }
 
 impl PlanarGraph {
+    #[allow(dead_code)]
     pub fn is_on_curve(self, point: Point) -> bool {
         return (self.lhs)(point.y) == (self.rhs)(point.x);
     }

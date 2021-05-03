@@ -5,10 +5,11 @@ pub struct Secp256k1Curve {
  }
 
 impl Secp256k1Curve {
+    #[allow(dead_code)]
     pub fn lhs(self, y: BigUint) -> BigUint {
         y.clone() * y
     }
-
+    #[allow(dead_code)]
     pub fn rhs(self, x: BigUint) -> BigUint {
         x.clone() * x.clone() * x + BigUint::from(7u64)
     }
