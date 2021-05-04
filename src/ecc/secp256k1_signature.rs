@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::fmt;
 use crate::ecc::secp256k1_scalar_element::{Secp256k1ScalarElement, new_secp256k1scalarelement_from_hex_str};
+use num_traits::AsPrimitive;
 
 pub struct Secp256k1Signature {
     pub(crate) r: Secp256k1ScalarElement,
@@ -10,6 +11,58 @@ pub struct Secp256k1Signature {
 impl Display for Secp256k1Signature {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f,"Signature({},{})",self.r,self.s)
+    }
+}
+
+impl Secp256k1Signature {
+    #[allow(dead_code)]
+    fn der_str(self) -> String {
+        let mut ret = "".to_string();
+        for v in self.der() {
+            ret += &*format!("{:02x}", v);
+        }
+        return ret;
+    }
+
+    #[allow(dead_code)]
+    fn der(self) -> Vec<u8> {
+        let prefix_marker = 0x30u8;
+        let r_bytes = self.r.num.to_bytes_be();
+        let s_bytes = self.s.num.to_bytes_be();
+        let mut r_sel: Vec<u8> = vec![];
+        let mut s_sel: Vec<u8> = vec![];
+        if r_bytes[0] >= 0x80u8 {
+            r_sel.push(0u8);
+        }
+        if s_bytes[0] >= 0x80u8 {
+            s_sel.push(0u8);
+        }
+
+        for rnum in r_bytes {
+            r_sel.push(rnum);
+        }
+        r_sel.insert(0,r_sel.len() as u8); // size
+        r_sel.insert(0,2u8); // marker
+        for snum in s_bytes {
+            s_sel.push(snum);
+        }
+        s_sel.insert(0,s_sel.len() as u8);
+        s_sel.insert(0,2u8); //marker
+
+        let size = (r_sel.len() + s_sel.len()) as u8;
+
+        let mut ret = vec![prefix_marker];
+        ret.push(size);
+
+        for v in r_sel {
+            ret.push(v);
+        }
+
+        for v in s_sel {
+            ret.push(v);
+        }
+
+        return ret;
     }
 }
 
@@ -40,6 +93,7 @@ mod tests {
     use crypto_hash::{hex_digest, Algorithm, digest};
     use crate::ecc::secp256k1_point::new_secp256k1point_g;
     use crate::ecc::secp256k1_scalar_element::{new_secp256k1scalarelement, new_secp256k1scalarelement_from_i32, new_secp256k1scalarelement_from_u64};
+    use crate::ecc::secp256k1_field::new_secp256k1element_from_hex_str;
 
     #[test]
     fn test_signature_practice_p71q7() {
@@ -57,5 +111,13 @@ mod tests {
         assert_eq!("2b698a0f0a4041b77e63488ad48c23e8e8838dd1fb7520408b121697b782ef22",r.num.to_str_radix(16));
         println!("s: {}",s.num.to_str_radix(16));
         assert_eq!("1dbc63bfef4416705e602a7b564161167076d8b20990a0f26f316cff2cb0bc1a",s.num.to_str_radix(16));
+    }
+
+    #[test]
+    fn test_der_format_p83q3() {
+        let r = new_secp256k1scalarelement_from_hex_str("37206a0610995c58074999cb9767b87af4c4978db68c06e8e6e81d282047a7c6").unwrap();
+        let s = new_secp256k1scalarelement_from_hex_str("8ca63759c1157ebeaec0d03cecca119fc9a75bf8e6d0fa65c841c8e2738cdaec").unwrap();
+        let sig = new_secp256k1signature(r,s);
+        println!("sig: {}",sig.der_str());
     }
 }
