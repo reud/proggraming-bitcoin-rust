@@ -1,7 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::fmt;
 use crate::ecc::secp256k1_scalar_element::{Secp256k1ScalarElement, new_secp256k1scalarelement_from_hex_str};
-use num_traits::AsPrimitive;
 
 pub struct Secp256k1Signature {
     pub(crate) r: Secp256k1ScalarElement,
@@ -93,7 +92,6 @@ mod tests {
     use crypto_hash::{hex_digest, Algorithm, digest};
     use crate::ecc::secp256k1_point::new_secp256k1point_g;
     use crate::ecc::secp256k1_scalar_element::{new_secp256k1scalarelement, new_secp256k1scalarelement_from_i32, new_secp256k1scalarelement_from_u64};
-    use crate::ecc::secp256k1_field::new_secp256k1element_from_hex_str;
 
     #[test]
     fn test_signature_practice_p71q7() {
