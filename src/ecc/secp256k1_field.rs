@@ -93,6 +93,19 @@ impl Sec256k1Element {
     pub fn inv(self) -> Sec256k1Element {
         return self.pow(prime() - BigUint::from(2u32))
     }
+
+    #[inline]
+    pub fn to_32_bytes_be(&self) -> Option<Vec<u8>> {
+        let mut bin = self.num.to_bytes_be();
+        if bin.len() > 32 {
+            return None;
+        }
+        // FIXME: より効率的に
+        while bin.len() != 32 {
+            bin.insert(0,0u8);
+        }
+        Some(bin)
+    }
 }
 
 impl Div for Sec256k1Element {

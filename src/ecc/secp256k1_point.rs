@@ -78,8 +78,16 @@ impl Secp256k1Point {
     }
 
     #[allow(dead_code)]
-    pub fn sec(self) -> String {
-        unimplemented!()
+    pub fn uncompressed_sec_str(self) -> String {
+        let mut ret = "04".to_string(); // prefix
+        for v in self.x.to_32_bytes_be().unwrap() {
+            ret += &*format!("{:02x}", v);
+        }
+        for v in self.y.to_32_bytes_be().unwrap() {
+            ret += &*format!("{:02x}", v);
+        }
+
+        return ret.to_string();
     }
 }
 
@@ -236,7 +244,7 @@ fn new_secp256k1point_from_hex_str(x: &str,y: &str) -> Option<Secp256k1Point> {
 mod tests {
     extern crate test;
     use super::*;
-    use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement_from_hex_str;
+    use crate::ecc::secp256k1_scalar_element::{new_secp256k1scalarelement_from_hex_str, new_secp256k1scalarelement_from_i32};
     use crate::ecc::secp256k1_signature::new_secp256k1signature;
 
     #[test]
@@ -305,6 +313,27 @@ mod tests {
             let s = new_secp256k1scalarelement_from_hex_str("c7207fee197d27c618aea621406f6bf5ef6fca38681d82b2f06fddbdce6feab6").unwrap();
             let sig = new_secp256k1signature(r,s);
             assert!(p.verify(z,sig));
+        }
+    }
+
+    #[test]
+    fn test_sec_p77q1() {
+        {
+            let g = new_secp256k1point_g();
+            let g = g.mul_from_i32(5000);
+            assert_eq!(g.uncompressed_sec_str(),"04ffe558e388852f0120e46af2d1b370f85854a8eb0841811ece0e3e03d282d57c315dc72890a4f10a1481c031b03b351b0dc79901ca18a00cf009dbdb157a1d10");
+        }
+        {
+            let g = new_secp256k1point_g();
+            let bi = new_secp256k1scalarelement_from_i32(2018);
+            let g = g.mul_from_sec256k1scalar_element(bi.pow(BigUint::from(5u8)));
+            assert_eq!(g.uncompressed_sec_str(),"04027f3da1918455e03c46f659266a1bb5204e959db7364d2f473bdf8f0a13cc9dff87647fd023c13b4a4994f17691895806e1b40b57f4fd22581a4f46851f3b06");
+        }
+        {
+            let g = new_secp256k1point_g();
+            let bi = BigUint::from_str_radix("deadbeef12345",16).unwrap();
+            let g = g.mul_from_big_uint(bi);
+            assert_eq!(g.uncompressed_sec_str(),"04d90cd625ee87dd38656dd95cf79f65f60f7273b67d3096e68bd81e4f5342691f842efa762fd59961d0e99803c61edba8b3e3f7dc3a341836f97733aebf987121");
         }
     }
 }

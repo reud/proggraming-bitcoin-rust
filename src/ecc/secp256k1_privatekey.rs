@@ -1,7 +1,7 @@
 use crate::ecc::secp256k1_scalar_element::{Secp256k1ScalarElement, new_secp256k1scalarelement};
 use crate::ecc::secp256k1_point::{Secp256k1Point, new_secp256k1point_g};
 use crate::ecc::secp256k1_signature::{Secp256k1Signature, new_secp256k1signature};
-use rand::{Rng, thread_rng};
+use rand::{thread_rng};
 use num_bigint::{RandBigInt, BigUint};
 use num_traits::{One, FromPrimitive, Num};
 
@@ -50,9 +50,6 @@ impl Secp256k1PrivateKey {
 mod tests {
     extern crate test;
     use super::*;
-    use crypto_hash::{hex_digest, Algorithm, digest};
-    use crate::ecc::secp256k1_point::new_secp256k1point_g;
-    use crate::ecc::secp256k1_scalar_element::{new_secp256k1scalarelement, new_secp256k1scalarelement_from_i32, new_secp256k1scalarelement_from_u64};
 
     #[test]
     fn test_sel() {
