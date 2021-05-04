@@ -1,7 +1,7 @@
-use crate::ecc::secp256k1_field::{Sec256k1Element, new_secp256k1element_from_i32, new_secp256k1element};
+use crate::ecc::secp256k1_field::{Secp256k1Element, new_secp256k1element_from_i32, new_secp256k1element};
 use std::fmt::{Display, Formatter};
 use std::fmt;
-use num_bigint::BigUint;
+use num_bigint::{BigUint };
 use num_traits::{FromPrimitive, Num, Zero, One};
 use crate::ecc::secp256k1_curve::{Secp256k1Curve, new_secp256k1curve};
 use std::ops::{Add, Rem, Div};
@@ -12,8 +12,8 @@ use crate::ecc::secp256k1_signature::Secp256k1Signature;
 
 #[derive(Debug, Clone)]
 pub struct Secp256k1Point {
-    pub(crate) x: Sec256k1Element,
-    pub(crate) y: Sec256k1Element,
+    pub(crate) x: Secp256k1Element,
+    pub(crate) y: Secp256k1Element,
     is_infinity: bool,
     curve: Secp256k1Curve
 }
@@ -31,6 +31,52 @@ impl PartialEq for Secp256k1Point {
 }
 
 impl Secp256k1Point {
+    #[allow(dead_code)]
+    fn parse_uncompressed_sec(v: Vec<u8>) -> Secp256k1Point {
+        if v.len() != 65 {
+            panic!("bad length: expect　65 but got {}",v.len())
+        }
+        let cons = v.split_first().unwrap();
+        let pos_vec = cons.1;
+        let xy_vec: Vec<Vec<u8>> = pos_vec.chunks(2).map(|x| x.to_vec()).collect();
+        if xy_vec.len() != 2 {
+            panic!("unknown error occuered(execute chunks(32),but cant get x,y positon)");
+        }
+
+        let x = BigUint::from_bytes_be(&*xy_vec[0]);
+        let y = BigUint::from_bytes_be(&*xy_vec[1]);
+
+        return new_secp256k1point_from_big_uint(x,y);
+    }
+
+    #[allow(dead_code)]
+    fn parse_compressed_sec(v: Vec<u8>) -> Secp256k1Point {
+        if v.len() != 33 {
+            panic!("bad length: expect　33 but got {}",v.len())
+        }
+        let cons = v.split_first().unwrap();
+        let marker = *cons.0;
+        let x = BigUint::from_bytes_be(cons.1);
+        let curve = new_secp256k1curve();
+        let y_square = curve.rhs(x.clone());
+        let y_square = new_secp256k1element(y_square);
+        let y_1 = y_square.sqrt();
+        let y_2 = Secp256k1Element::prime() - y_1.clone();
+        if marker == 2u8 { // y is even
+            if y_1.clone().rem(new_secp256k1element_from_i32(2)).num == BigUint::zero() {
+                return new_secp256k1point_from_element(new_secp256k1element(x),y_1);
+            }
+            return new_secp256k1point_from_element(new_secp256k1element(x),y_2);
+        }
+        if marker == 3u8 { // y is odd
+            if y_1.clone().rem(new_secp256k1element_from_i32(2)).num == BigUint::zero() {
+                return new_secp256k1point_from_element(new_secp256k1element(x),y_2);
+            }
+            return new_secp256k1point_from_element(new_secp256k1element(x),y_1);
+        }
+        panic!("unrecognized marker: {} marker can be only (2,3) ",marker);
+    }
+
     fn inner_mul(self, f: Secp256k1Point, v: BigUint) -> Secp256k1Point {
         if v == BigUint::zero() {
             return new_secp256k1point_infinity();
@@ -88,6 +134,49 @@ impl Secp256k1Point {
         }
 
         return ret.to_string();
+    }
+
+    #[allow(dead_code)]
+    pub fn uncompressed_sec(self) -> Vec<u8> {
+        let mut vec = vec![4u8];
+        // fixme: vecがマージできそうな構造にする。
+        for v in self.x.to_32_bytes_be().unwrap() {
+            vec.push(v);
+        }
+        for v in self.y.to_32_bytes_be().unwrap() {
+            vec.push(v);
+        }
+        vec
+    }
+
+    #[allow(dead_code)]
+    pub fn compressed_sec_str(self) -> String {
+        let is_even = self.y.rem(new_secp256k1element_from_i32(2)) == new_secp256k1element_from_i32(0);
+        let mut ret: String = "".to_string();
+        if is_even {
+            ret += "02";
+        } else {
+            ret += "03";
+        }
+        for v in self.x.to_32_bytes_be().unwrap() {
+            ret += &*format!("{:02x}", v);
+        }
+        return ret;
+    }
+
+    #[allow(dead_code)]
+    pub fn compressed_sec(self) -> Vec<u8> {
+        let mut v: Vec<u8> = vec![];
+        let is_even = self.y.rem(new_secp256k1element_from_i32(2)) == new_secp256k1element_from_i32(0);
+        if is_even {
+            v.push(2u8);
+        } else {
+            v.push(3u8);
+        }
+        for x in self.x.to_32_bytes_be().unwrap() {
+            v.push(x);
+        }
+        v
     }
 }
 
@@ -202,7 +291,7 @@ fn new_secp256k1point_from_big_uint(x: BigUint,y: BigUint) -> Secp256k1Point {
 }
 
 
-fn new_secp256k1point_from_element(x: Sec256k1Element,y: Sec256k1Element) -> Secp256k1Point {
+fn new_secp256k1point_from_element(x: Secp256k1Element,y: Secp256k1Element) -> Secp256k1Point {
     return Secp256k1Point {
         x,
         y,
@@ -334,6 +423,27 @@ mod tests {
             let bi = BigUint::from_str_radix("deadbeef12345",16).unwrap();
             let g = g.mul_from_big_uint(bi);
             assert_eq!(g.uncompressed_sec_str(),"04d90cd625ee87dd38656dd95cf79f65f60f7273b67d3096e68bd81e4f5342691f842efa762fd59961d0e99803c61edba8b3e3f7dc3a341836f97733aebf987121");
+        }
+    }
+
+    #[test]
+    fn test_sec_p81q2() {
+        {
+            let g = new_secp256k1point_g();
+            let g = g.mul_from_i32(5001);
+            assert_eq!(g.compressed_sec_str(),"0357a4f368868a8a6d572991e484e664810ff14c05c0fa023275251151fe0e53d1");
+        }
+        {
+            let g = new_secp256k1point_g();
+            let bi = new_secp256k1scalarelement_from_i32(2019);
+            let g = g.mul_from_sec256k1scalar_element(bi.pow(BigUint::from(5u8)));
+            assert_eq!(g.compressed_sec_str(),"02933ec2d2b111b92737ec12f1c5d20f3233a0ad21cd8b36d0bca7a0cfa5cb8701");
+        }
+        {
+            let g = new_secp256k1point_g();
+            let bi = BigUint::from_str_radix("deadbeef54321",16).unwrap();
+            let g = g.mul_from_big_uint(bi);
+            assert_eq!(g.compressed_sec_str(),"0296be5b1292f6c856b3c5654e886fc13511462059089cdf9c479623bfcbe77690");
         }
     }
 }
