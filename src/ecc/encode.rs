@@ -14,7 +14,7 @@ pub fn encode_base58(v: Vec<u8>) -> String {
         }
     }
     let mut prefix = "".to_string();
-    for _ in 1..count {
+    for _ in 0..count {
         prefix += "1";
     }
 
@@ -28,6 +28,16 @@ pub fn encode_base58(v: Vec<u8>) -> String {
     return prefix + &*result;
 }
 
+#[allow(dead_code)]
+pub fn encode_base58_checksum(b: Vec<u8>) -> String {
+    let sha256r1 = crypto_hash::digest(crypto_hash::Algorithm::SHA256, &*b);
+    let sha256r2 = crypto_hash::digest(crypto_hash::Algorithm::SHA256, &*sha256r1);
+    let mut check_sum = sha256r2[..4].to_vec();
+    let mut ret = b.clone();
+    ret.append(&mut check_sum);
+
+    return encode_base58(ret);
+}
 
 
 #[cfg(test)]

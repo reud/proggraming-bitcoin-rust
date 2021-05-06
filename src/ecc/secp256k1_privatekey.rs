@@ -1,4 +1,4 @@
-use crate::ecc::secp256k1_scalar_element::{Secp256k1ScalarElement, new_secp256k1scalarelement};
+use crate::ecc::secp256k1_scalar_element::{Secp256k1ScalarElement, new_secp256k1scalarelement, new_secp256k1scalarelement_from_i32};
 use crate::ecc::secp256k1_point::{Secp256k1Point, new_secp256k1point_g};
 use crate::ecc::secp256k1_signature::{Secp256k1Signature, new_secp256k1signature};
 use rand::{thread_rng};
@@ -13,7 +13,7 @@ fn prime() -> BigUint {
 #[derive(Debug, Clone)]
 pub struct Secp256k1PrivateKey {
     secret: Secp256k1ScalarElement,
-    point: Secp256k1Point
+    pub(crate) point: Secp256k1Point
 }
 
 #[allow(dead_code)]
@@ -24,6 +24,21 @@ pub fn new_secp_256k1privatekey(secret: Secp256k1ScalarElement) -> Secp256k1Priv
     }
 }
 
+#[allow(dead_code)]
+pub fn new_secp_256k1privatekey_from_biguint(secret: BigUint) -> Secp256k1PrivateKey {
+    return Secp256k1PrivateKey {
+        secret: new_secp256k1scalarelement( secret.clone()),
+        point: new_secp256k1point_g().mul_from_big_uint(secret)
+    }
+}
+
+#[allow(dead_code)]
+pub fn new_secp_256k1privatekey_from_i32(secret: i32) -> Secp256k1PrivateKey {
+    return Secp256k1PrivateKey {
+        secret: new_secp256k1scalarelement_from_i32(secret),
+        point: new_secp256k1point_g().mul_from_i32(secret)
+    }
+}
 impl Secp256k1PrivateKey {
     #[allow(dead_code)]
     pub fn hex(self) -> String {

@@ -8,6 +8,8 @@ use std::ops::{Add, Rem, Div};
 
 use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 use crate::ecc::secp256k1_signature::Secp256k1Signature;
+use crate::ecc::helper::hash160;
+use crate::ecc::encode::encode_base58_checksum;
 
 
 #[derive(Debug, Clone)]
@@ -31,6 +33,33 @@ impl PartialEq for Secp256k1Point {
 }
 
 impl Secp256k1Point {
+
+    #[allow(dead_code)]
+    pub fn compressed_address(self, test_net: bool) -> String {
+        let prefix:u8 = if test_net { 0x6f } else { 0x00 };
+        let mut h160 = self.hash160_by_compressed_sec();
+        h160.insert(0,prefix);
+        return encode_base58_checksum(h160);
+    }
+
+    #[allow(dead_code)]
+    pub fn uncompressed_address(self, test_net: bool) -> String {
+        let prefix:u8 = if test_net { 0x6f } else { 0x00 };
+        let mut h160 = self.hash160_by_uncompressed_sec();
+        h160.insert(0,prefix);
+        return encode_base58_checksum(h160);
+    }
+
+    #[allow(dead_code)]
+    pub fn hash160_by_compressed_sec(self) -> Vec<u8> {
+        return hash160(self.compressed_sec());
+    }
+
+    #[allow(dead_code)]
+    pub fn hash160_by_uncompressed_sec(self) -> Vec<u8> {
+        return hash160(self.uncompressed_sec());
+    }
+
     #[allow(dead_code)]
     fn parse_uncompressed_sec(v: Vec<u8>) -> Secp256k1Point {
         if v.len() != 65 {
@@ -335,6 +364,7 @@ mod tests {
     use super::*;
     use crate::ecc::secp256k1_scalar_element::{new_secp256k1scalarelement_from_hex_str, new_secp256k1scalarelement_from_i32};
     use crate::ecc::secp256k1_signature::new_secp256k1signature;
+    use crate::ecc::secp256k1_privatekey::{new_secp_256k1privatekey_from_i32, new_secp_256k1privatekey};
 
     #[test]
     fn test_base_point() {
@@ -444,6 +474,27 @@ mod tests {
             let bi = BigUint::from_str_radix("deadbeef54321",16).unwrap();
             let g = g.mul_from_big_uint(bi);
             assert_eq!(g.compressed_sec_str(),"0296be5b1292f6c856b3c5654e886fc13511462059089cdf9c479623bfcbe77690");
+        }
+    }
+
+    #[test]
+    fn test_address_p86() {
+        {
+            let private = new_secp_256k1privatekey_from_i32(5002);
+            let addr = private.point.uncompressed_address(true);
+            assert_eq!("mmTPbXQFxboEtNRkwfh6K51jvdtHLxGeMA",addr);
+        }
+        {
+            let se = new_secp256k1scalarelement_from_i32(2020);
+            let private = new_secp_256k1privatekey(se.pow(BigUint::from(5u8)));
+            let addr = private.point.compressed_address(true);
+            assert_eq!("mopVkxp8UhXqRYbCYJsbeE1h1fiF64jcoH",addr)
+        }
+        {
+            let se = new_secp256k1scalarelement_from_hex_str("12345deadbeef").unwrap();
+            let private = new_secp_256k1privatekey(se);
+            let addr = private.point.compressed_address(false);
+            assert_eq!("1F1Pn2y6pDb68E5nYJJeba4TLg2U7B6KF1",addr);
         }
     }
 }
