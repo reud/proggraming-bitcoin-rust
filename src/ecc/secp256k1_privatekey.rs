@@ -4,6 +4,7 @@ use crate::ecc::secp256k1_signature::{Secp256k1Signature, new_secp256k1signature
 use rand::{thread_rng};
 use num_bigint::{RandBigInt, BigUint};
 use num_traits::{One, FromPrimitive, Num};
+use crate::ecc::encode::encode_base58_checksum;
 
 // 楕円曲線上の加算に対しての有限体の位数はこの値となる。
 fn prime() -> BigUint {
@@ -57,6 +58,19 @@ impl Secp256k1PrivateKey {
         }
         return new_secp256k1signature(r,s);
     }
+    #[allow(dead_code)]
+    pub fn wif(self,compressed: bool,testnet: bool) -> String {
+        let mut result = self.secret.to_32_bytes_be().unwrap();
+        if testnet {
+            result.insert(0,0xefu8);
+        } else {
+            result.insert(0,0x80u8);
+        }
+        if compressed {
+            result.push(1u8);
+        }
+        return encode_base58_checksum(result);
+    }
 
 }
 
@@ -65,6 +79,7 @@ impl Secp256k1PrivateKey {
 mod tests {
     extern crate test;
     use super::*;
+    use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement_from_hex_str;
 
     #[test]
     fn test_sel() {
@@ -72,6 +87,28 @@ mod tests {
         let a = BigUint::from(500u64);
         for v in a.to_bytes_be() {
             print!("{} ",v);
+        }
+    }
+
+    #[test]
+    fn test_wif_p87q6() {
+        {
+            let el = new_secp256k1scalarelement_from_i32(5003);
+            let pk = new_secp_256k1privatekey(el);
+            let result = pk.wif(true,true);
+            assert_eq!(result,"cMahea7zqjxrtgAbB7LSGbcQUr1uX1ojuat9jZodMN8rFTv2sfUK")
+        }
+        {
+            let el = new_secp256k1scalarelement_from_i32(2021).pow(BigUint::from(5u8));
+            let pk = new_secp_256k1privatekey(el);
+            let result = pk.wif(false,true);
+            assert_eq!(result,"91avARGdfge8E4tZfYLoxeJ5sGBdNJQH4kvjpWAxgzczjbCwxic")
+        }
+        {
+            let el = new_secp256k1scalarelement_from_hex_str("54321deadbeef").unwrap();
+            let pk = new_secp_256k1privatekey(el);
+            let result = pk.wif(true,false);
+            assert_eq!(result,"KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgiuQJv1h8Ytr2S53a")
         }
     }
 }
