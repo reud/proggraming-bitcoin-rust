@@ -1,5 +1,6 @@
 use std::num::ParseIntError;
 use std::io::{Cursor, Read};
+use num_bigint::BigUint;
 
 #[allow(dead_code)]
 pub fn u8vec_to_str(v: Vec<u8>) -> String {
@@ -53,4 +54,65 @@ pub fn read_varint(c: &mut Cursor<Vec<u8>>) -> u64 {
         return u64::from_le_bytes(bytes);
     }
     return i as u64;
+}
+
+#[allow(dead_code)]
+pub fn encode_varint(i: u64) -> Vec<u8> {
+    if i < 0xfd {
+        return vec![i as u8];
+    }
+    if i < 0x10000 {
+        let mut v = vec![0xfdu8];
+        for x in (i as u16).to_le_bytes() {
+            v.push(x);
+        }
+        assert_eq!(v.len(),3);
+        return v;
+    }
+    if i < 0x100000000 {
+        let mut v = vec![0xfeu8];
+        for x in (i as u32).to_le_bytes() {
+            v.push(x);
+        }
+        assert_eq!(v.len(),5);
+        return v;
+    }
+    if i < 0x10000000000000000 {
+        let mut v = vec![0xffu8];
+        for x in i.to_le_bytes() {
+            v.push(x);
+        }
+        assert_eq!(v.len(),9);
+        return v;
+    }
+    panic!("integer too large: {}", i);
+}
+
+#[allow(dead_code)]
+pub fn biguint_to_32_bytes_be(num: BigUint) -> [u8;32] {
+    let mut ret = [0u8;32];
+    let mut bin = num.to_bytes_be();
+    if bin.len() > 32 {
+        return ret;
+    }
+    let buf = bin.len(); // 20
+    let x = 32 - buf; // 12
+    let i = 0;
+    while i < x {
+        ret[i+buf] = bin[i];
+    }
+    return ret;
+}
+
+#[allow(dead_code)]
+pub fn biguint_to_32_bytes_le(num: BigUint) -> [u8;32] {
+    let mut ret = [0u8;32];
+    let mut bin = num.to_bytes_le();
+    if bin.len() > 32 {
+        return ret;
+    }
+    while i < bin.len() {
+        ret[i] = bin[i];
+    }
+    return ret;
 }

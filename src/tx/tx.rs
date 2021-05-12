@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::fmt;
-use crate::tx::helper::{hash256, u8vec_to_str, vector_as_u8_4_array, read_varint};
+use crate::tx::helper::{hash256, u8vec_to_str, vector_as_u8_4_array, read_varint, encode_varint};
 use std::io::{self, Cursor, Read};
 use crate::tx::tx_in::TxIn;
 use crate::tx::tx_out::TxOut;
@@ -18,10 +18,6 @@ pub struct Tx {
 
 
 impl Tx {
-    fn serialize(self) -> Vec<u8> {
-        // TBD
-        return vec![0u8];
-    }
 
     fn hash(self) -> Vec<u8> {
         return hash256(self.serialize())
@@ -45,6 +41,28 @@ impl Tx {
             lock_time,
             testnet
         }
+    }
+
+    pub fn serialize(self) -> Vec<u8> {
+        // version
+        let mut v = vec![];
+        for x in self.version.to_le_bytes() {
+            v.push(x);
+        }
+        // ins_len
+        v.append(&mut encode_varint(self.tx_ins.len() as u64));
+        for tx_in in self.tx_ins {
+            v.append(&mut tx_in.serialize());
+        }
+       // out_len
+        v.append(&mut encode_varint(self.tx_outs.len() as u64));
+        for tx_out in self.tx_outs {
+            v.append(&mut tx_out.serialize());
+        }
+        for x in self.lock_time.to_le_bytes() {
+            v.push(x);
+        }
+        return v;
     }
 
     pub fn parse(testnet: bool, c: &mut Cursor<Vec<u8>>) -> Tx {

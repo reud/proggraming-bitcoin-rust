@@ -12,6 +12,15 @@ pub struct TxOut {
 }
 
 impl TxOut {
+    pub fn serialize(mut self) -> Vec<u8> {
+        let mut v = vec![];
+        for x in self.amount.to_le_bytes() {
+            v.push(x);
+        }
+        v.append(&mut self.script_pub_key);
+        return v;
+    }
+
     pub fn parse(c: &mut Cursor<Vec<u8>>) -> TxOut {
         let mut amount = [0u8; 8];
         c.read(&mut amount);

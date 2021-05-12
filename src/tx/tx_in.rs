@@ -1,6 +1,6 @@
 use num_bigint::BigUint;
 use std::io::{Cursor, Read};
-use crate::tx::helper::read_varint;
+use crate::tx::helper::{read_varint, biguint_to_32_bytes_le};
 use std::fmt::{Formatter, Display};
 use std::fmt;
 
@@ -13,6 +13,22 @@ pub struct TxIn {
 }
 
 impl TxIn {
+    pub fn serialize(mut self) -> Vec<u8> {
+        let mut v = vec![];
+        let prev_transaction_id = biguint_to_32_bytes_le(self.prev_transaction_id);
+        for x in prev_transaction_id {
+            v.push(x);
+        }
+        for x in self.prev_transaction_index.to_le_bytes() {
+            v.push(x);
+        }
+        v.append(&mut self.script_sig);
+        let sequence = self.sequence.to_le_bytes();
+        for x in sequence {
+            v.push(x);
+        }
+        return v;
+    }
     pub fn parse(c: &mut Cursor<Vec<u8>>) -> TxIn {
         let mut prev_transaction_id = [0u8;32];
         c.read(&mut prev_transaction_id);
