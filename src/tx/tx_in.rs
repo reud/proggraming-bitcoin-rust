@@ -8,7 +8,7 @@ use std::fmt;
 pub struct TxIn {
     pub(crate) prev_transaction_id: BigUint,
     pub(crate) prev_transaction_index: u32,
-    script_sig: Vec<u8>,
+    pub(crate) script_sig: Vec<u8>,
     sequence: u32,
 }
 
@@ -24,8 +24,10 @@ impl TxIn {
 
         let script_sig_sz = read_varint(c);
 
+        println!("script_sz: {}",script_sig_sz );
         let mut script_sig = vec![0u8; script_sig_sz as usize];
         c.read(&mut *script_sig);
+        println!("script_sig: {:x?}", &script_sig[..]);
 
         let mut sequence = [0u8; 4];
         c.read(&mut sequence);
