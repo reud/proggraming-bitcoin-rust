@@ -3,6 +3,8 @@ use std::io::{Cursor, Read};
 use crate::tx::helper::{read_varint, biguint_to_32_bytes_le};
 use std::fmt::{Formatter, Display};
 use std::fmt;
+use crate::tx::tx::Tx;
+use crate::tx::tx_fetcher::{TxFetcher, encode_hex};
 
 #[derive(Debug,Clone)]
 pub struct TxIn {
@@ -13,6 +15,16 @@ pub struct TxIn {
 }
 
 impl TxIn {
+
+    pub fn fetch_tx(self,testnet: bool) -> Tx {
+        return TxFetcher::fetch(self.prev_transaction_id,testnet,false);
+    }
+
+    pub fn value(self,testnet: bool) -> u64 {
+        let tx = self.fetch_tx(testnet);
+        return tx.tx_outs[self.prev_transaction_index].amount
+    }
+
     pub fn serialize(mut self) -> Vec<u8> {
         let mut v = vec![];
         let prev_transaction_id = biguint_to_32_bytes_le(self.prev_transaction_id);

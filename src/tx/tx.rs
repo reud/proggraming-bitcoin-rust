@@ -4,13 +4,15 @@ use crate::tx::helper::{hash256, u8vec_to_str, vector_as_u8_4_array, read_varint
 use std::io::{self, Cursor, Read};
 use crate::tx::tx_in::TxIn;
 use crate::tx::tx_out::TxOut;
+use num_bigint::BigUint;
+use num_traits::FromPrimitive;
 
 #[derive(Debug,Clone)]
 pub struct Tx {
     version: u32,
-    tx_ins: Vec<TxIn>,
-    tx_outs: Vec<TxOut>,
-    lock_time: u32,
+    pub(crate) tx_ins: Vec<TxIn>,
+    pub(crate) tx_outs: Vec<TxOut>,
+    pub(crate) lock_time: u32,
     testnet: bool,
 }
 
@@ -19,11 +21,23 @@ pub struct Tx {
 
 impl Tx {
 
+    pub fn fee(self,testnet: bool) -> BigUint {
+        let mut input_sum = BigUint::from(0u8);
+        let mut output_sum = BigUint::from(0u8);
+        for tx_in in self.tx_ins {
+            input_sum += BigUint::from_u64(tx_in.value(testnet));
+        }
+        for tx_out in self.tx_outs {
+            output_sum += tx_out.amount;
+        }
+        return input_sum - output_sum;
+    }
+
     fn hash(self) -> Vec<u8> {
         return hash256(self.serialize())
     }
 
-    fn id(self) -> String {
+    pub fn id(self) -> String {
         // 人が読める16進数表記のトランザクションハッシュ
         return u8vec_to_str(self.hash());
     }

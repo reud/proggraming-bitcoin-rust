@@ -7,8 +7,8 @@ use std::fmt;
 
 #[derive(Debug,Clone)]
 pub struct TxOut {
-    amount: u64,
-    script_pub_key: Vec<u8>
+    pub(crate) amount: u64,
+    pub(crate) script_pub_key: Vec<u8>
 }
 
 impl TxOut {
