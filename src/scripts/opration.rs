@@ -1,8 +1,42 @@
-use crate::scripts::element::Element;
+use crate::scripts::element::{Element, new_element, new_element_from_bytes};
 use crate::scripts::stack::Stack;
+use num_bigint::{BigUint, BigInt};
+use num_traits::{Zero, Signed, ToPrimitive};
 
 #[allow(dead_code)]
 pub struct Operations {
+}
+
+fn encode_num(mut num: BigInt) -> Element {
+    if num == BigInt::zero() {
+        return new_element();
+    }
+    let mut v:Vec<u8> = vec![];
+    let mut abs_num = num.abs().to_biguint().unwrap();
+    let negative = num < BigInt::zero();
+
+    while abs_num.clone() != BigUint::zero() {
+        let and = abs_num.clone() & BigUint::from(0xff as u8);
+        v.push(and.to_u8().unwrap());
+        abs_num >>= BigUint::from(8u8);
+    }
+
+    if v[v.len()-1] & 0x80 {
+        if negative {
+            v.push(0x80);
+        } else {
+            v.push(0);
+        }
+    }
+    else if negative {
+        v[v.len()-1] |= 0x80
+    }
+
+    return new_element_from_bytes(v);
+}
+
+fn decode_num(mut element: Element) -> BigInt {
+    if element.is_emp
 }
 
 impl Operations {
