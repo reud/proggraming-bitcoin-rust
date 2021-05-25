@@ -17,7 +17,7 @@ pub fn hash256(v: Vec<u8>) -> Vec<u8> {
     let sha256r2 = crypto_hash::digest(crypto_hash::Algorithm::SHA256, &*sha256r1);
     return sha256r2;
 }
-
+#[allow(dead_code)]
 pub fn vector_as_u8_4_array(vector: Vec<u8>) -> [u8;4] {
     let mut arr = [0u8;4];
     for (place, element) in arr.iter_mut().zip(vector.iter()) {
@@ -36,28 +36,38 @@ pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
 #[allow(dead_code)]
 pub fn read_varint(c: &mut Cursor<Vec<u8>>) -> u64 {
     let mut i = [0u8];
-    c.read(&mut i);
+
+    if c.read(&mut i).is_err() {
+        panic!("failed to read varint")
+    }
+
     let i = i[0];
     if i == 0xfd {
         let mut bytes = [0u8;2];
-        c.read(&mut bytes);
+        if c.read(&mut bytes).is_err() {
+            panic!("failed to read bytes")
+        }
         return u16::from_le_bytes(bytes) as u64;
     }
     if i == 0xfe {
         let mut bytes = [0u8;4];
-        c.read(&mut bytes);
+        if c.read(&mut bytes).is_err() {
+            panic!("failed to read bytes")
+        }
         return u32::from_le_bytes(bytes) as u64;
     }
     if i == 0xff {
         let mut bytes = [0u8;8];
-        c.read(&mut bytes);
+        if c.read(&mut bytes).is_err() {
+            panic!("failed to read bytes")
+        }
         return u64::from_le_bytes(bytes);
     }
     return i as u64;
 }
 
 #[allow(dead_code)]
-pub fn encode_varint(i: u64) -> Vec<u8> {
+pub fn encode_varint(i: u128) -> Vec<u8> {
     if i < 0xfd {
         return vec![i as u8];
     }
@@ -91,7 +101,7 @@ pub fn encode_varint(i: u64) -> Vec<u8> {
 #[allow(dead_code)]
 pub fn biguint_to_32_bytes_be(num: BigUint) -> [u8;32] {
     let mut ret = [0u8;32];
-    let mut bin = num.to_bytes_be();
+    let bin = num.to_bytes_be();
     if bin.len() > 32 {
         return ret;
     }
@@ -104,15 +114,18 @@ pub fn biguint_to_32_bytes_be(num: BigUint) -> [u8;32] {
     return ret;
 }
 
+
 #[allow(dead_code)]
 pub fn biguint_to_32_bytes_le(num: BigUint) -> [u8;32] {
     let mut ret = [0u8;32];
-    let mut bin = num.to_bytes_le();
+    let bin = num.to_bytes_le();
     if bin.len() > 32 {
         return ret;
     }
+    let mut i = bin.len();
     while i < bin.len() {
         ret[i] = bin[i];
+        i += 1;
     }
     return ret;
 }

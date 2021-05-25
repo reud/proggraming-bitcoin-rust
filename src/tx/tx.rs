@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::fmt;
 use crate::tx::helper::{hash256, u8vec_to_str, vector_as_u8_4_array, read_varint, encode_varint};
-use std::io::{self, Cursor, Read};
+use std::io::{Cursor, Read};
 use crate::tx::tx_in::TxIn;
 use crate::tx::tx_out::TxOut;
 use num_bigint::BigUint;
@@ -20,12 +20,12 @@ pub struct Tx {
 
 
 impl Tx {
-
+    #[allow(dead_code)]
     pub fn fee(self,testnet: bool) -> BigUint {
         let mut input_sum = BigUint::from(0u8);
         let mut output_sum = BigUint::from(0u8);
         for tx_in in self.tx_ins {
-            input_sum += BigUint::from_u64(tx_in.value(testnet));
+            input_sum += BigUint::from_u64(tx_in.value(testnet)).unwrap();
         }
         for tx_out in self.tx_outs {
             output_sum += tx_out.amount;
@@ -41,7 +41,7 @@ impl Tx {
         // 人が読める16進数表記のトランザクションハッシュ
         return u8vec_to_str(self.hash());
     }
-
+    #[allow(dead_code)]
     fn parse_from_vec(testnet: bool,serialization: Vec<u8>) -> Tx {
         let version = vector_as_u8_4_array(serialization[..4].to_vec());
         let version = u32::from_le_bytes(version);
@@ -64,12 +64,12 @@ impl Tx {
             v.push(x);
         }
         // ins_len
-        v.append(&mut encode_varint(self.tx_ins.len() as u64));
+        v.append(&mut encode_varint(self.tx_ins.len() as u128));
         for tx_in in self.tx_ins {
             v.append(&mut tx_in.serialize());
         }
        // out_len
-        v.append(&mut encode_varint(self.tx_outs.len() as u64));
+        v.append(&mut encode_varint(self.tx_outs.len() as u128));
         for tx_out in self.tx_outs {
             v.append(&mut tx_out.serialize());
         }
@@ -82,14 +82,17 @@ impl Tx {
     pub fn parse(testnet: bool, c: &mut Cursor<Vec<u8>>) -> Tx {
 
         let mut version = [0u8;4];
-        c.read(&mut version);
+        let result = c.read(&mut version);
+        if result.is_err() {
+            panic!("failed to read version")
+        }
         println!("raw version: {:?}", &version[..]);
         let version = u32::from_le_bytes(version);
 
         let tx_ins_len = read_varint(c);
         let mut tx_ins = vec![];
 
-        for i in 0..tx_ins_len {
+        for _ in 0..tx_ins_len {
             tx_ins.push(TxIn::parse( c));
         }
 
@@ -97,12 +100,15 @@ impl Tx {
 
         let mut tx_outs = vec![];
 
-        for i in 0..tx_outs_size {
+        for _ in 0..tx_outs_size {
             tx_outs.push(TxOut::parse( c));
         }
 
         let mut lock_time = [0u8;4];
-        c.read(&mut lock_time);
+        if c.read(&mut lock_time).is_err() {
+            panic!("failed to read lock_time")
+        }
+
         let lock_time = u32::from_le_bytes(lock_time);
         
         println!("version: {} \ntx_ins_len: {}", version, tx_ins_len);

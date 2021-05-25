@@ -4,7 +4,7 @@ use crate::tx::helper::{read_varint, biguint_to_32_bytes_le};
 use std::fmt::{Formatter, Display};
 use std::fmt;
 use crate::tx::tx::Tx;
-use crate::tx::tx_fetcher::{TxFetcher, encode_hex};
+use crate::tx::tx_fetcher::{TxFetcher};
 
 #[derive(Debug,Clone)]
 pub struct TxIn {
@@ -17,12 +17,13 @@ pub struct TxIn {
 impl TxIn {
 
     pub fn fetch_tx(self,testnet: bool) -> Tx {
-        return TxFetcher::fetch(self.prev_transaction_id,testnet,false);
+        return TxFetcher::fetch(self.prev_transaction_id,testnet);
     }
 
     pub fn value(self,testnet: bool) -> u64 {
+        let index: usize = self.prev_transaction_index as usize;
         let tx = self.fetch_tx(testnet);
-        return tx.tx_outs[self.prev_transaction_index].amount
+        return tx.tx_outs[index].amount
     }
 
     pub fn serialize(mut self) -> Vec<u8> {
@@ -43,22 +44,35 @@ impl TxIn {
     }
     pub fn parse(c: &mut Cursor<Vec<u8>>) -> TxIn {
         let mut prev_transaction_id = [0u8;32];
-        c.read(&mut prev_transaction_id);
+        if c.read(&mut prev_transaction_id).is_err() {
+            panic!("failed to read prev_transaction_id")
+        }
         let prev_transaction_id = BigUint::from_bytes_le(&prev_transaction_id);
 
         let mut prev_transaction_index = [0u8; 4];
-        c.read(&mut prev_transaction_index);
+        if c.read(&mut prev_transaction_index).is_err() {
+            panic!("failed to read prev_transaction_index")
+        }
+
         let  prev_transaction_index = u32::from_le_bytes(prev_transaction_index);
 
         let script_sig_sz = read_varint(c);
 
         println!("script_sz: {}",script_sig_sz );
+
         let mut script_sig = vec![0u8; script_sig_sz as usize];
-        c.read(&mut *script_sig);
+
+        if c.read(&mut *script_sig).is_err() {
+            panic!("failed to read script_sig")
+        }
+
         println!("script_sig: {:x?}", &script_sig[..]);
 
         let mut sequence = [0u8; 4];
-        c.read(&mut sequence);
+        if c.read(&mut sequence).is_err() {
+            panic!("failed to read sequence")
+        }
+
         let sequence = u32::from_le_bytes(sequence);
 
         return TxIn {

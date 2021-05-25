@@ -1,4 +1,3 @@
-use num_bigint::BigUint;
 use std::io::{Cursor, Read};
 use crate::tx::helper::{read_varint, u8vec_to_str};
 use std::fmt::{Display, Formatter};
@@ -23,12 +22,16 @@ impl TxOut {
 
     pub fn parse(c: &mut Cursor<Vec<u8>>) -> TxOut {
         let mut amount = [0u8; 8];
-        c.read(&mut amount);
+        if c.read(&mut amount).is_err() {
+            panic!("failed to read amount")
+        }
         let amount = u64::from_le_bytes(amount);
 
         let script_pub_key_sz = read_varint(c);
         let mut script_pub_key = vec![0u8; script_pub_key_sz as usize];
-        c.read(&mut script_pub_key);
+        if c.read(&mut script_pub_key).is_err() {
+            panic!("failed to read script_pub_key")
+        }
 
         return TxOut {
             amount,

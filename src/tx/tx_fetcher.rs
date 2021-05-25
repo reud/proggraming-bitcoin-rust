@@ -2,19 +2,20 @@ use num_bigint::BigUint;
 use crate::tx::tx::Tx;
 use std::io::{Read, Cursor};
 use std::num::ParseIntError;
+use std::fmt::Write;
 
 #[derive(Debug,Clone)]
 pub struct TxFetcher {
-
 }
 
+#[allow(dead_code)]
 pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
     (0..s.len())
         .step_by(2)
         .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
         .collect()
 }
-
+#[allow(dead_code)]
 pub fn encode_hex(bytes: &[u8]) -> String {
     let mut s = String::with_capacity(bytes.len() * 2);
     for &b in bytes {
@@ -24,6 +25,7 @@ pub fn encode_hex(bytes: &[u8]) -> String {
 }
 
 impl TxFetcher {
+    #[allow(dead_code)]
     pub fn get_url(testnet: bool) -> &'static str {
         return if testnet {
             "http://testnet.programmingbitcoin.com"
@@ -32,14 +34,20 @@ impl TxFetcher {
         }
     }
 
-    pub fn fetch(tx_id: BigUint, testnet: bool, fresh: bool) -> Tx {
+    // TODO: cache
+    #[allow(dead_code)]
+    pub fn fetch(tx_id: BigUint, testnet: bool) -> Tx {
         let url = format!("{}/tx/{}.hex",TxFetcher::get_url(testnet),tx_id);
         let response = reqwest::blocking::get(url);
         if response.is_err() {
-            panic!(response.err().unwrap())
+            panic!("{}", response.err().unwrap())
         }
         let mut body = String::new();
-        response.unwrap().read_to_string(&mut body);
+
+        if response.unwrap().read_to_string(&mut body).is_err() {
+            panic!("failed to read_string (body)")
+        }
+
         println!("{}",body.is_empty());
         let hex = decode_hex(&*body).unwrap();
 
@@ -63,8 +71,9 @@ impl TxFetcher {
 
 
         let tx_id_str = tx_id.to_str_radix(16);
-        if tx.id() !=tx_id_str {
-            panic!("not the same id: {} vs {}", tx.id(),tx_id_str);
+        let id = tx.clone().id();
+        if id !=tx_id_str {
+            panic!("not the same id: {} vs {}", id,tx_id_str);
         }
 
         return tx;
