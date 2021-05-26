@@ -2,7 +2,7 @@ use crate::scripts::helper::hash256;
 
 #[derive(Debug,Clone)]
 pub struct Element {
-    inner_data: Vec<u8>
+    pub(crate) inner_data: Vec<u8>
 }
 
 impl Element {
@@ -15,6 +15,13 @@ impl Element {
     #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         return self.inner_data.is_empty()
+    }
+    // 新たなオブジェクトを生成する。
+    #[allow(dead_code)]
+    pub fn reverse(&self) -> Element {
+        let mut result = self.clone();
+        result.inner_data.reverse();
+        return result
     }
 }
 pub fn new_element() -> Element {
