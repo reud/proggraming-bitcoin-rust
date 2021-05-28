@@ -20,6 +20,9 @@ impl<T: std::clone::Clone> Stack<T> {
     pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
     }
+    pub fn len(&self) -> usize {
+        self.stack.len()
+    }
 }
 
 fn new_stack<T: Clone>() -> Stack<T> {

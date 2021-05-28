@@ -74,6 +74,382 @@ impl Operations {
         }
     }
     #[allow(dead_code)]
+    pub fn op_0(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::zero()));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_1negate(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(-1)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_1(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(1)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_2(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(2)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_3(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(3)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_4(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(4)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_5(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(5)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_6(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(6)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_7(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(7)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_8(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(8)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_9(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(9)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_10(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(10)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_11(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(11)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_12(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(12)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_13(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(13)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_14(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(14)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_15(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(15)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_16(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(16)));
+        return true;
+    }
+    #[allow(dead_code)]
+    pub fn op_if(stack: &mut Stack<Element>, items: &mut Vec<u8>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let mut true_items: Vec<u8> = vec![];
+        let mut false_items:Vec<u8> = vec![];
+        let mut found = false;
+        let mut num_endifs_needed = 1;
+        let mut is_true_items = true;
+
+        while items.len() > 0 {
+            let item = items.remove(0);
+            if item == 99 || item == 100 {
+                num_endifs_needed += 1;
+                if is_true_items {
+                    true_items.push(item);
+                } else {
+                    false_items.push(item);
+                }
+
+            } else if num_endifs_needed == 1 && item == 103 {
+                is_true_items = false;
+            } else if item == 104 {
+                if num_endifs_needed == 1 {
+                    found = true;
+                    break
+                } else {
+                    num_endifs_needed -= 1;
+                    if is_true_items {
+                        true_items.push(item);
+                    } else {
+                        false_items.push(item);
+                    }
+                }
+            } else {
+                if is_true_items {
+                    true_items.push(item);
+                } else {
+                    false_items.push(item);
+                }
+            }
+        }
+
+        if ! found {
+            return false;
+        }
+        element = stack.pop().unwrap();
+        items.clear();
+        if decode_num(element) == BigInt::zero() {
+            for v in false_items.into_iter() {
+                items.push(v);
+            }
+        } else {
+            for v in true_items.into_iter() {
+                items.push(v);
+            }
+        }
+
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_notif(stack: &mut Stack<Element>, items: &mut Vec<u8>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let mut true_items: Vec<u8> = vec![];
+        let mut false_items:Vec<u8> = vec![];
+        let mut found = false;
+        let mut num_endifs_needed = 1;
+        let mut is_true_items = true;
+
+        while items.len() > 0 {
+            let item = items.remove(0);
+            if item == 99 || item == 100 {
+                num_endifs_needed += 1;
+                if is_true_items {
+                    true_items.push(item);
+                } else {
+                    false_items.push(item);
+                }
+
+            } else if num_endifs_needed == 1 && item == 103 {
+                is_true_items = false;
+            } else if item == 104 {
+                if num_endifs_needed == 1 {
+                    found = true;
+                    break
+                } else {
+                    num_endifs_needed -= 1;
+                    if is_true_items {
+                        true_items.push(item);
+                    } else {
+                        false_items.push(item);
+                    }
+                }
+            } else {
+                if is_true_items {
+                    true_items.push(item);
+                } else {
+                    false_items.push(item);
+                }
+            }
+        }
+
+        if ! found {
+            return false;
+        }
+        element = stack.pop().unwrap();
+        items.clear();
+        if decode_num(element) == BigInt::zero() {
+            for v in true_items.into_iter() {
+                items.push(v);
+            }
+        } else {
+            for v in false_items.into_iter() {
+                items.push(v);
+            }
+        }
+
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_verify(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let element = stack.pop().unwrap();
+        if decode_num(element) == BigInt::zero() {
+            return false;
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_return(stack: &mut Stack<Element>) -> bool {
+        return false;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_toaltstack(stack: &mut Stack<Element>, alt_stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        alt_stack.push(stack.pop().unwrap());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_fromaltstack(stack: &mut Stack<Element>, alt_stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        stack.push(alt_stack.pop().unwrap());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_2drop(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        stack.pop().unwrap();
+        stack.pop().unwrap();
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_2dup(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+
+        stack.push(two.clone());
+        stack.push(one.clone());
+        stack.push(two.clone());
+        stack.push(one.clone());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_3dup(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 3 {
+            return false;
+        }
+
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+        let three = stack.pop().unwrap();
+
+        stack.push(three.clone());
+        stack.push(two.clone());
+        stack.push(one.clone());
+        stack.push(three.clone());
+        stack.push(two.clone());
+        stack.push(one.clone());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_2over(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 4 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+        let three = stack.pop().unwrap();
+        let four = stack.pop().unwrap();
+
+        stack.push(four.clone());
+        stack.push(three.clone());
+        stack.push(two.clone());
+        stack.push(one.clone());
+        stack.push(four.clone());
+        stack.push(three.clone());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_2rot(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 6 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+        let three = stack.pop().unwrap();
+        let four = stack.pop().unwrap();
+        let five = stack.pop().unwrap();
+        let six = stack.pop().unwrap();
+
+        stack.push(four.clone());
+        stack.push(three.clone());
+        stack.push(two.clone());
+        stack.push(one.clone());
+        stack.push(five.clone());
+        stack.push(six.clone());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_2swap(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 4 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+        let three = stack.pop().unwrap();
+        let four = stack.pop().unwrap();
+        stack.push(two);
+        stack.push(one);
+        stack.push(four);
+        stack.push(three);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_ifdup(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let el = stack.top().unwrap();
+        if decode_num(el.clone()) != BigInt::zero() {
+            stack.push(el);
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_depth(stack: &mut Stack<Element>) -> bool {
+        stack.push(encode_num(BigInt::from(stack.len())));
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_drop(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let _ = stack.pop();
+        return true;
+    }
+
+    #[allow(dead_code)]
     pub fn op_dup(stack: &mut Stack<Element>) -> bool {
         if stack.is_empty() {
             return false;
