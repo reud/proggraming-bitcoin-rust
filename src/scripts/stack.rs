@@ -23,6 +23,9 @@ impl<T: std::clone::Clone> Stack<T> {
     pub fn len(&self) -> usize {
         self.stack.len()
     }
+    pub fn get(&self, index: usize) -> Option<T> {
+        self.stack.get(index)
+    }
 }
 
 fn new_stack<T: Clone>() -> Stack<T> {

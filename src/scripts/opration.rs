@@ -1,7 +1,7 @@
 use crate::scripts::element::{Element, new_element, new_element_from_bytes};
 use crate::scripts::stack::Stack;
 use num_bigint::{BigUint, BigInt};
-use num_traits::{Zero, Signed, ToPrimitive};
+use num_traits::{Zero, Signed, ToPrimitive, One};
 
 #[allow(dead_code)]
 pub struct Operations {
@@ -458,6 +458,49 @@ impl Operations {
         stack.push(top);
         return true;
     }
+
+    #[allow(dead_code)]
+    pub fn op_nip(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let _ = stack.pop().unwrap();
+        stack.push(one);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_over(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+        stack.push(two.clone());
+        stack.push(one);
+        stack.push(two);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_pick(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+
+        let n = decode_num(stack.pop().unwrap());
+        let bi = BigInt::from(stack.len());
+        if bi < (n + BigInt::one()) {
+            return false;
+        }
+        let last = stack.len() - 1;
+        let index = (last as u64) - n.to_u64().unwrap();
+        stack.push(stack.get(index as usize).unwrap());
+        return true;
+    }
+
+
     #[allow(dead_code)]
     pub fn op_hash256(stack: &mut Stack<Element>) -> bool {
         if stack.is_empty() {
