@@ -1,5 +1,5 @@
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Ord, PartialOrd, Eq, PartialEq)]
 pub struct Stack<T> {
     stack: Vec<T>
 }
@@ -23,8 +23,11 @@ impl<T: std::clone::Clone> Stack<T> {
     pub fn len(&self) -> usize {
         self.stack.len()
     }
-    pub fn get(&self, index: usize) -> Option<T> {
+    pub fn get(&self, index: usize) -> Option<&T> {
         self.stack.get(index)
+    }
+    pub fn erase(&mut self, index: usize) -> T {
+        self.stack.remove(index)
     }
 }
 
@@ -50,14 +53,12 @@ mod tests {
 
     #[test]
     fn test_stack() {
-        {
-            let mut s: Stack<i32> = new_stack();
-            s.push(3);
-            s.push(2);
-            s.push(1);
-            assert_eq!(s.pop().unwrap(),1);
-            assert_eq!(s.pop().unwrap(),2);
-            assert_eq!(s.pop().unwrap(),3);
-        }
+        let mut s: Stack<i32> = new_stack();
+        s.push(3);
+        s.push(2);
+        s.push(1);
+        assert_eq!(s.pop().unwrap(),1);
+        assert_eq!(s.pop().unwrap(),2);
+        assert_eq!(s.pop().unwrap(),3);
     }
 }

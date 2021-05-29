@@ -1,6 +1,6 @@
 use crate::scripts::helper::hash256;
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Ord, PartialOrd, Eq, PartialEq)]
 pub struct Element {
     pub(crate) inner_data: Vec<u8>
 }
@@ -22,6 +22,10 @@ impl Element {
         let mut result = self.clone();
         result.inner_data.reverse();
         return result
+    }
+    #[allow(dead_code)]
+    pub fn len(&self) -> usize {
+        self.inner_data.len()
     }
 }
 pub fn new_element() -> Element {

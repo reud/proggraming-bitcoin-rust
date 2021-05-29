@@ -7,7 +7,7 @@ use num_traits::{Zero, Signed, ToPrimitive, One};
 pub struct Operations {
 }
 
-fn encode_num(mut num: BigInt) -> Element {
+fn encode_num(num: BigInt) -> Element {
     if num == BigInt::zero() {
         return new_element();
     }
@@ -36,11 +36,11 @@ fn encode_num(mut num: BigInt) -> Element {
     return new_element_from_bytes(v);
 }
 
-fn decode_num(mut element: Element) -> BigInt {
+fn decode_num(element: Element) -> BigInt {
     if element.is_empty() {
         return BigInt::zero();
     }
-    let mut big_endian = element.reverse();
+    let big_endian = element.reverse();
     let mut negative = false;
     let mut result = BigInt::zero();
 
@@ -210,7 +210,7 @@ impl Operations {
         if ! found {
             return false;
         }
-        element = stack.pop().unwrap();
+        let element = stack.pop().unwrap();
         items.clear();
         if decode_num(element) == BigInt::zero() {
             for v in false_items.into_iter() {
@@ -272,7 +272,7 @@ impl Operations {
         if ! found {
             return false;
         }
-        element = stack.pop().unwrap();
+        let element = stack.pop().unwrap();
         items.clear();
         if decode_num(element) == BigInt::zero() {
             for v in true_items.into_iter() {
@@ -299,7 +299,7 @@ impl Operations {
         return true;
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code,unused)]
     pub fn op_return(stack: &mut Stack<Element>) -> bool {
         return false;
     }
@@ -491,12 +491,126 @@ impl Operations {
 
         let n = decode_num(stack.pop().unwrap());
         let bi = BigInt::from(stack.len());
-        if bi < (n + BigInt::one()) {
+        if bi < (n.clone() + BigInt::one()) {
             return false;
         }
         let last = stack.len() - 1;
         let index = (last as u64) - n.to_u64().unwrap();
-        stack.push(stack.get(index as usize).unwrap());
+        let v = (*stack).get(index as usize).unwrap();
+        stack.push(v.clone());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_roll(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let n = decode_num(stack.pop().unwrap());
+        let bi = BigInt::from(stack.len());
+        if bi < (n.clone() + BigInt::one()) {
+            return false;
+        }
+        if n == BigInt::zero() {
+            return true;
+        }
+        let last = stack.len() - 1;
+        let index = (last as u64) - n.to_u64().unwrap();
+        let el = stack.erase(index as usize);
+        stack.push(el);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_rot(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 3 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+        let three = stack.pop().unwrap();
+
+        stack.push(two);
+        stack.push(one);
+        stack.push(three);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_swap(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+
+        stack.push(one);
+        stack.push(two);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_tuck(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let one = stack.pop().unwrap();
+        let two = stack.pop().unwrap();
+
+        stack.push(two.clone());
+        stack.push(one);
+        stack.push(two);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_size(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let top = stack.top().unwrap();
+        let len = BigInt::from(top.len());
+        stack.push(encode_num(len));
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_equal(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = stack.pop().unwrap();
+        let el2 = stack.pop().unwrap();
+        if el1 == el2 {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_equalverify(stack: &mut Stack<Element>) -> bool {
+        return Operations::op_equal(stack) && Operations::op_verify(stack);
+    }
+
+    #[allow(dead_code)]
+    pub fn op_1add(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let el = decode_num(stack.pop().unwrap());
+        stack.push(encode_num(el + BigInt::one()));
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_1sub(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let el = decode_num(stack.pop().unwrap());
+        stack.push(encode_num(el - BigInt::one()));
         return true;
     }
 
