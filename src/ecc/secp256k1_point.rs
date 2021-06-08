@@ -8,9 +8,8 @@ use std::ops::{Add, Rem, Div};
 
 use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 use crate::ecc::secp256k1_signature::Secp256k1Signature;
-use crate::ecc::helper::hash160;
 use crate::ecc::encode::encode_base58_checksum;
-
+use crate::helper::helper::{hash160};
 
 #[derive(Debug, Clone)]
 pub struct Secp256k1Point {

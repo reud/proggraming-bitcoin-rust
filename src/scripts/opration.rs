@@ -614,6 +614,206 @@ impl Operations {
         return true;
     }
 
+    #[allow(dead_code)]
+    pub fn op_negate(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let el = decode_num(stack.pop().unwrap());
+        stack.push(encode_num(-el));
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_abs(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let el = decode_num(stack.pop().unwrap());
+        if el < BigInt::zero() {
+            stack.push(encode_num(-el));
+        } else {
+            stack.push(encode_num(el));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_not(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return  false;
+        }
+        let el = stack.pop().unwrap();
+        if decode_num(el) == BigInt::zero() {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_0notequal(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let el = stack.pop().unwrap();
+        if decode_num(el) == BigInt::zero() {
+            stack.push(encode_num(BigInt::zero()));
+        } else {
+            stack.push(encode_num(BigInt::one()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_add(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = stack.pop().unwrap();
+        let el2 = stack.pop().unwrap();
+        stack.push(el1 + el2);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_sub(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = stack.pop().unwrap();
+        let el2 = stack.pop().unwrap();
+        stack.push(el1 - el2);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_booland(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if (el1 & el2) != BigInt::zero() {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_boolor(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if (el1 | el2) != BigInt::zero() {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_numequal(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if el1 == el2 {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_numequalverify(stack: &mut Stack<Element>) -> bool {
+        let flag1 = Operations::op_numequal(stack);
+        let flag2 = Operations::op_verify(stack);
+        return flag1 && flag2;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_numnotequal(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if el1 == el2 {
+            stack.push(encode_num(BigInt::zero()));
+        } else {
+            stack.push(encode_num(BigInt::one()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_lessthan(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if el2 < el1 {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_greaterthan(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if el2 > el1 {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_lessthanorequal(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if el2 <= el1 {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_greaterthanorequal(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if el2 >= el1 {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
 
     #[allow(dead_code)]
     pub fn op_hash256(stack: &mut Stack<Element>) -> bool {
@@ -622,6 +822,16 @@ impl Operations {
         }
         let top = stack.pop().unwrap();
         stack.push(top.hash256());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_hash160(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let top = stack.pop().unwrap();
+        stack.push(top.hash160());
         return true;
     }
 }

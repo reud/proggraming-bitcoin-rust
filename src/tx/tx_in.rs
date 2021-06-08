@@ -1,10 +1,10 @@
 use num_bigint::BigUint;
 use std::io::{Cursor, Read};
-use crate::tx::helper::{read_varint, biguint_to_32_bytes_le};
 use std::fmt::{Formatter, Display};
 use std::fmt;
 use crate::tx::tx::Tx;
 use crate::tx::tx_fetcher::{TxFetcher};
+use crate::helper::helper::{biguint_to_32_bytes_le, read_varint};
 
 #[derive(Debug,Clone)]
 pub struct TxIn {

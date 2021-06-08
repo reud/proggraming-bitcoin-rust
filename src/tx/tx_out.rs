@@ -1,7 +1,7 @@
 use std::io::{Cursor, Read};
-use crate::tx::helper::{read_varint, u8vec_to_str};
 use std::fmt::{Display, Formatter};
 use std::fmt;
+use crate::helper::helper::{read_varint, u8vec_to_str};
 
 
 #[derive(Debug,Clone)]
