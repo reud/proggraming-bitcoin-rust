@@ -1,6 +1,6 @@
 use crate::helper::helper::read_varint;
 use std::io::{Cursor, Read};
-use num_bigint::BigInt;
+use num_bigint::{BigInt, Sign};
 
 pub struct Script {
     cmds: Vec<BigInt>
@@ -42,8 +42,20 @@ impl Script {
                 if read_result.is_err() {
                     panic!(read_result.err().unwrap());
                 }
-                unimplemented!()
+                let bi = BigInt::from_bytes_le(Sign::NoSign, &*buf);
+                cmds.push(bi);
+                count += read_len;
+            } else if current_byte == 76 {
+                let read_len = current_byte;
+                let mut buf: Vec<u8> = vec![0u8; read_len as usize];
 
+                let read_result = c.read(&mut buf);
+                if read_result.is_err() {
+                    panic!(read_result.err().unwrap());
+                }
+                let bi = BigInt::from_bytes_le(Sign::NoSign, &*buf);
+                cmds.push(bi);
+                count += read_len;
             }
         }
         return new_script(cmds);
