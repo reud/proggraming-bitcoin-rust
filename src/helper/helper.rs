@@ -1,7 +1,7 @@
-use ripemd160::{Ripemd160, Digest};
-use std::num::ParseIntError;
-use std::io::{Cursor, Read};
 use num_bigint::BigUint;
+use ripemd160::{Digest, Ripemd160};
+use std::io::{Cursor, Read};
+use std::num::ParseIntError;
 
 #[allow(dead_code)]
 pub fn hash256(v: Vec<u8>) -> Vec<u8> {
@@ -14,11 +14,9 @@ pub fn hash256(v: Vec<u8>) -> Vec<u8> {
 pub fn hash160(v: Vec<u8>) -> Vec<u8> {
     let sha256 = crypto_hash::digest(crypto_hash::Algorithm::SHA256, &*v);
     let mut hasher = Ripemd160::new();
-    Digest::update(&mut hasher,sha256);
+    Digest::update(&mut hasher, sha256);
     hasher.finalize().to_vec()
 }
-
-
 
 // for test
 #[allow(dead_code)]
@@ -30,10 +28,9 @@ pub fn u8vec_to_str(v: Vec<u8>) -> String {
     return ret;
 }
 
-
 #[allow(dead_code)]
-pub fn vector_as_u8_4_array(vector: Vec<u8>) -> [u8;4] {
-    let mut arr = [0u8;4];
+pub fn vector_as_u8_4_array(vector: Vec<u8>) -> [u8; 4] {
+    let mut arr = [0u8; 4];
     for (place, element) in arr.iter_mut().zip(vector.iter()) {
         *place = *element;
     }
@@ -57,21 +54,21 @@ pub fn read_varint(c: &mut Cursor<Vec<u8>>) -> u64 {
 
     let i = i[0];
     if i == 0xfd {
-        let mut bytes = [0u8;2];
+        let mut bytes = [0u8; 2];
         if c.read(&mut bytes).is_err() {
             panic!("failed to read bytes")
         }
         return u16::from_le_bytes(bytes) as u64;
     }
     if i == 0xfe {
-        let mut bytes = [0u8;4];
+        let mut bytes = [0u8; 4];
         if c.read(&mut bytes).is_err() {
             panic!("failed to read bytes")
         }
         return u32::from_le_bytes(bytes) as u64;
     }
     if i == 0xff {
-        let mut bytes = [0u8;8];
+        let mut bytes = [0u8; 8];
         if c.read(&mut bytes).is_err() {
             panic!("failed to read bytes")
         }
@@ -87,34 +84,34 @@ pub fn encode_varint(i: u128) -> Vec<u8> {
     }
     if i < 0x10000 {
         let mut v = vec![0xfdu8];
-        for x in (i as u16).to_le_bytes() {
-            v.push(x);
+        for x in (i as u16).to_le_bytes().iter() {
+            v.push(*x);
         }
-        assert_eq!(v.len(),3);
+        assert_eq!(v.len(), 3);
         return v;
     }
     if i < 0x100000000 {
         let mut v = vec![0xfeu8];
-        for x in (i as u32).to_le_bytes() {
-            v.push(x);
+        for x in (i as u32).to_le_bytes().iter() {
+            v.push(*x);
         }
-        assert_eq!(v.len(),5);
+        assert_eq!(v.len(), 5);
         return v;
     }
     if i < 0x10000000000000000 {
         let mut v = vec![0xffu8];
-        for x in i.to_le_bytes() {
-            v.push(x);
+        for x in i.to_le_bytes().iter() {
+            v.push(*x);
         }
-        assert_eq!(v.len(),9);
+        assert_eq!(v.len(), 9);
         return v;
     }
     panic!("integer too large: {}", i);
 }
 
 #[allow(dead_code)]
-pub fn biguint_to_32_bytes_be(num: BigUint) -> [u8;32] {
-    let mut ret = [0u8;32];
+pub fn biguint_to_32_bytes_be(num: BigUint) -> [u8; 32] {
+    let mut ret = [0u8; 32];
     let bin = num.to_bytes_be();
     if bin.len() > 32 {
         return ret;
@@ -123,15 +120,14 @@ pub fn biguint_to_32_bytes_be(num: BigUint) -> [u8;32] {
     let x = 32 - buf; // 12
     let i = 0;
     while i < x {
-        ret[i+buf] = bin[i];
+        ret[i + buf] = bin[i];
     }
     return ret;
 }
 
-
 #[allow(dead_code)]
-pub fn biguint_to_32_bytes_le(num: BigUint) -> [u8;32] {
-    let mut ret = [0u8;32];
+pub fn biguint_to_32_bytes_le(num: BigUint) -> [u8; 32] {
+    let mut ret = [0u8; 32];
     let bin = num.to_bytes_le();
     if bin.len() > 32 {
         return ret;

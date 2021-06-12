@@ -1,20 +1,19 @@
-use std::io::{Cursor, Read};
-use std::fmt::{Display, Formatter};
-use std::fmt;
 use crate::helper::helper::{read_varint, u8vec_to_str};
+use std::fmt;
+use std::fmt::{Display, Formatter};
+use std::io::{Cursor, Read};
 
-
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct TxOut {
     pub(crate) amount: u64,
-    pub(crate) script_pub_key: Vec<u8>
+    pub(crate) script_pub_key: Vec<u8>,
 }
 
 impl TxOut {
     pub fn serialize(mut self) -> Vec<u8> {
         let mut v = vec![];
-        for x in self.amount.to_le_bytes() {
-            v.push(x);
+        for x in self.amount.to_le_bytes().iter() {
+            v.push(*x);
         }
         v.append(&mut self.script_pub_key);
         return v;
@@ -35,15 +34,18 @@ impl TxOut {
 
         return TxOut {
             amount,
-            script_pub_key
-        }
+            script_pub_key,
+        };
     }
 }
 
 impl Display for TxOut {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f,"  amount: {}\n  script_pub_key: {}",
-               self.amount,
-               u8vec_to_str(self.clone().script_pub_key))
+        write!(
+            f,
+            "  amount: {}\n  script_pub_key: {}",
+            self.amount,
+            u8vec_to_str(self.clone().script_pub_key)
+        )
     }
 }
