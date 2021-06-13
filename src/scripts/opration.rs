@@ -112,6 +112,37 @@ impl Operations {
             116 => Some(NormalOperation(Operations::op_depth)),
             117 => Some(NormalOperation(Operations::op_drop)),
             118 => Some(NormalOperation(Operations::op_dup)),
+            119 => Some(NormalOperation(Operations::op_nip)),
+            120 => Some(NormalOperation(Operations::op_over)),
+            121 => Some(NormalOperation(Operations::op_pick)),
+            122 => Some(NormalOperation(Operations::op_roll)),
+            123 => Some(NormalOperation(Operations::op_rot)),
+            124 => Some(NormalOperation(Operations::op_swap)),
+            125 => Some(NormalOperation(Operations::op_tuck)),
+            130 => Some(NormalOperation(Operations::op_size)),
+            135 => Some(NormalOperation(Operations::op_equal)),
+            136 => Some(NormalOperation(Operations::op_equalverify)),
+            139 => Some(NormalOperation(Operations::op_1add)),
+            140 => Some(NormalOperation(Operations::op_1sub)),
+            143 => Some(NormalOperation(Operations::op_negate)),
+            144 => Some(NormalOperation(Operations::op_abs)),
+            145 => Some(NormalOperation(Operations::op_boolor)),
+            146 => Some(NormalOperation(Operations::op_0notequal)),
+            147 => Some(NormalOperation(Operations::op_add)),
+            148 => Some(NormalOperation(Operations::op_sub)),
+            154 => Some(NormalOperation(Operations::op_booland)),
+            155 => Some(NormalOperation(Operations::op_boolor)),
+            156 => Some(NormalOperation(Operations::op_numequal)),
+            157 => Some(NormalOperation(Operations::op_numequalverify)),
+            158 => Some(NormalOperation(Operations::op_numnotequal)),
+            159 => Some(NormalOperation(Operations::op_lessthan)),
+            160 => Some(NormalOperation(Operations::op_greaterthan)),
+            161 => Some(NormalOperation(Operations::op_lessthanorequal)),
+            162 => Some(NormalOperation(Operations::op_greaterthanorequal)),
+            163 => Some(NormalOperation(Operations::op_min)),
+            164 => Some(NormalOperation(Operations::op_max)),
+            165 => Some(NormalOperation(Operations::op_within)),
+            166 => Some(NormalOperation(Operations::op_r))
 
             _ => None,
         };
@@ -494,6 +525,14 @@ impl Operations {
         let _ = stack.pop();
         return true;
     }
+    #[allow(dead_code)]
+    pub fn op_ripemd160(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let el = stack.pop();
+        hash16
+    }
 
     #[allow(dead_code)]
     pub fn op_dup(stack: &mut Stack<Element>) -> bool {
@@ -733,6 +772,54 @@ impl Operations {
         stack.push(el1 - el2);
         return true;
     }
+
+    #[allow(dead_code)]
+    pub fn op_min(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if el1 < el2 {
+            stack.push(encode_num(el1));
+        } else {
+            stack.push(encode_num(el2));
+        }
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_within(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 3 {
+            return false;
+        }
+        let maximum = decode_num(stack.pop().unwrap());
+        let minimum = decode_num(stack.pop().unwrap());
+        let element = decode_num(stack.pop().unwrap());
+        if element >= minimum && element < maximum {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
+    }
+
+
+    #[allow(dead_code)]
+    pub fn op_max(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = decode_num(stack.pop().unwrap());
+        let el2 = decode_num(stack.pop().unwrap());
+        if el1 > el2 {
+            stack.push(encode_num(el1));
+        } else {
+            stack.push(encode_num(el2));
+        }
+        return true;
+    }
+
 
     #[allow(dead_code)]
     pub fn op_booland(stack: &mut Stack<Element>) -> bool {
