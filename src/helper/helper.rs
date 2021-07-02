@@ -2,6 +2,8 @@ use num_bigint::BigUint;
 use ripemd160::{Digest, Ripemd160};
 use std::io::{Cursor, Read};
 use std::num::ParseIntError;
+use crypto::sha1::Sha1;
+use crypto::digest::Digest as D;
 
 #[allow(dead_code)]
 pub fn hash256(v: Vec<u8>) -> Vec<u8> {
@@ -11,12 +13,32 @@ pub fn hash256(v: Vec<u8>) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
+pub fn sha256(v: Vec<u8>) -> Vec<u8> {
+    crypto_hash::digest(crypto_hash::Algorithm::SHA256,&*v)
+}
+
+#[allow(dead_code)]
 pub fn hash160(v: Vec<u8>) -> Vec<u8> {
     let sha256 = crypto_hash::digest(crypto_hash::Algorithm::SHA256, &*v);
+    ripemd160(sha256)
+}
+
+#[allow(dead_code)]
+pub fn ripemd160(v: Vec<u8>) -> Vec<u8> {
     let mut hasher = Ripemd160::new();
-    Digest::update(&mut hasher, sha256);
+    Digest::update(&mut hasher, v);
     hasher.finalize().to_vec()
 }
+
+#[allow(dead_code)]
+pub fn sha1(v: Vec<u8>) -> Vec<u8> {
+    let mut hasher = Sha1::new();
+    hasher.input(&*v);
+    let mut ret:Vec<u8> = vec![];
+    hasher.result(&mut *ret);
+    return ret;
+}
+
 
 // for test
 #[allow(dead_code)]

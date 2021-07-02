@@ -1,7 +1,7 @@
 use std::ops::{Sub, Add, Mul, Rem, Div, BitAnd, BitOr};
 use num_bigint::{BigInt, BigUint};
 use num_traits::{Zero, Signed, ToPrimitive};
-use crate::helper::helper::{hash256, hash160};
+use crate::helper::helper::{hash256, hash160, sha1, sha256, ripemd160};
 
 #[derive(Debug,Clone,Ord, PartialOrd, Eq, PartialEq)]
 pub struct Element {
@@ -22,6 +22,28 @@ impl Element {
             inner_data: hash160(self.inner_data)
         }
     }
+
+    #[allow(dead_code)]
+    pub fn ripemd160(self) -> Element {
+        Element {
+            inner_data: ripemd160(self.inner_data)
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn sha1(self) -> Element {
+        Element {
+            inner_data: sha1(self.inner_data)
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn sha256(self) -> Element {
+        Element {
+            inner_data: sha256(self.inner_data)
+        }
+    }
+
     #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         return self.inner_data.is_empty()

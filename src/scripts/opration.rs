@@ -142,8 +142,11 @@ impl Operations {
             163 => Some(NormalOperation(Operations::op_min)),
             164 => Some(NormalOperation(Operations::op_max)),
             165 => Some(NormalOperation(Operations::op_within)),
-            166 => Some(NormalOperation(Operations::op_r))
-
+            166 => Some(NormalOperation(Operations::op_ripemd160)),
+            167 => Some(NormalOperation(Operations::op_sha1)),
+            168 => Some(NormalOperation(Operations::op_sha256)),
+            169 => Some(NormalOperation(Operations::op_hash160)),
+            170 => Some(NormalOperation(Operations::op_hash256)),
             _ => None,
         };
     }
@@ -524,14 +527,6 @@ impl Operations {
         }
         let _ = stack.pop();
         return true;
-    }
-    #[allow(dead_code)]
-    pub fn op_ripemd160(stack: &mut Stack<Element>) -> bool {
-        if stack.is_empty() {
-            return false;
-        }
-        let el = stack.pop();
-        hash16
     }
 
     #[allow(dead_code)]
@@ -966,6 +961,49 @@ impl Operations {
         let top = stack.pop().unwrap();
         stack.push(top.hash160());
         return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_ripemd160(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let top = stack.pop().unwrap();
+        stack.push(top.ripemd160());
+        return true;
+    }
+
+
+    #[allow(dead_ccode)]
+    pub fn op_sha1(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false
+        }
+        let top = stack.pop().unwrap();
+        stack.push(top.sha1());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_sha256(stack: &mut Stack<Element>) -> bool {
+        if stack.is_empty() {
+            return false;
+        }
+        let top = stack.pop().unwrap();
+        stack.push(top.sha256());
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_checksig(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+
+        let sec_pubkey = stack.pop().unwrap();
+        let el = stack.pop().unwrap();
+        let der_signature = el[el.len()-1];
+        unimplemented!()
     }
 }
 
