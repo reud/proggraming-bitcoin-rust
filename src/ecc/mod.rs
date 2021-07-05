@@ -1,13 +1,12 @@
+pub mod encode;
 pub mod field_element;
 pub mod field_graph;
+pub mod field_point;
 pub mod field_point_on_curve;
 pub mod point;
-pub mod field_point;
-mod secp256k1_field;
-mod secp256k1_point;
-mod secp256k1_curve;
-mod secp256k1_scalar_element;
-mod secp256k1_signature;
-mod secp256k1_privatekey;
-mod encode;
-
+pub mod secp256k1_curve;
+pub mod secp256k1_field;
+pub mod secp256k1_point;
+pub mod secp256k1_privatekey;
+pub mod secp256k1_scalar_element;
+pub mod secp256k1_signature;

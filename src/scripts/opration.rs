@@ -1,6 +1,10 @@
+use crate::ecc::secp256k1_point::Secp256k1Point;
+use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
+use crate::ecc::secp256k1_signature::Secp256k1Signature;
 use crate::scripts::element::{new_element, new_element_from_bytes, Element};
 use crate::scripts::opration::Operation::{
-    AdditionalItemOperation, AdditionalStackOperation, NormalOperation,
+    AdditionalItemOperation, AdditionalScalarElementOperation, AdditionalStackOperation,
+    NormalOperation,
 };
 use crate::scripts::script::Cmd::OperationCode;
 use crate::scripts::stack::Stack;
@@ -71,6 +75,10 @@ pub enum Operation {
     NormalOperation(fn(&mut Stack<Element>) -> bool),
     AdditionalStackOperation(fn(&mut Stack<Element>, &mut Stack<Element>) -> bool),
     AdditionalItemOperation(fn(stack: &mut Stack<Element>, items: &mut Vec<u8>) -> bool),
+    AdditionalScalarElementOperation(
+        fn(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool,
+    ),
+    AdditionalInfoOperation(fn(&mut Stack<Element>, u32, u32) -> bool),
 }
 
 impl Operations {
@@ -147,6 +155,7 @@ impl Operations {
             168 => Some(NormalOperation(Operations::op_sha256)),
             169 => Some(NormalOperation(Operations::op_hash160)),
             170 => Some(NormalOperation(Operations::op_hash256)),
+            172 => Some(AdditionalScalarElementOperation(Operations::op_checksig)),
             _ => None,
         };
     }
@@ -799,7 +808,6 @@ impl Operations {
         return true;
     }
 
-
     #[allow(dead_code)]
     pub fn op_max(stack: &mut Stack<Element>) -> bool {
         if stack.len() < 2 {
@@ -814,7 +822,6 @@ impl Operations {
         }
         return true;
     }
-
 
     #[allow(dead_code)]
     pub fn op_booland(stack: &mut Stack<Element>) -> bool {
@@ -973,11 +980,10 @@ impl Operations {
         return true;
     }
 
-
     #[allow(dead_ccode)]
     pub fn op_sha1(stack: &mut Stack<Element>) -> bool {
         if stack.is_empty() {
-            return false
+            return false;
         }
         let top = stack.pop().unwrap();
         stack.push(top.sha1());
@@ -995,14 +1001,36 @@ impl Operations {
     }
 
     #[allow(dead_code)]
-    pub fn op_checksig(stack: &mut Stack<Element>) -> bool {
-        if stack.len() < 2 {
-            return false;
-        }
+    pub fn op_checksig(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
+        unimplemented!()
+    }
 
-        let sec_pubkey = stack.pop().unwrap();
-        let el = stack.pop().unwrap();
-        let der_signature = el[el.len()-1];
+    #[allow(dead_code)]
+    pub fn op_checksigverify(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
+        return Operations::op_checksig(stack, z) && Operations::op_verify(stack);
+    }
+
+    #[allow(dead_code)]
+    pub fn op_checkmultisig(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
+        unimplemented!()
+    }
+
+    #[allow(dead_code)]
+    pub fn op_checkmultisigverify(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
+        return Operations::op_checkmultisig(stack, z) && Operations::op_verify(stack);
+    }
+
+    #[allow(dead_code)]
+    pub fn op_checklocktimeverify(
+        stack: &mut Stack<Element>,
+        locktime: u32,
+        sequence: u32,
+    ) -> bool {
+        unimplemented!()
+    }
+
+    #[allow(dead_code)]
+    pub fn op_checksequenceverify(stack: &mut Stack<Element>, version: u32, sequence: u32) -> bool {
         unimplemented!()
     }
 }
