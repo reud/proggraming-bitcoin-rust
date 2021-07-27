@@ -61,6 +61,17 @@ impl Secp256k1Point {
     }
 
     #[allow(dead_code)]
+    pub fn parse(v: Vec<u8>) -> Secp256k1Point {
+        if v.len() == 65 {
+            return Secp256k1Point::parse_uncompressed_sec(v);
+        } else if v.len() == 33 {
+            return Secp256k1Point::parse_compressed_sec(v);
+        } else {
+            panic!("bad length: expect　65 or 33 but got {}", v.len())
+        }
+    }
+
+    #[allow(dead_code)]
     pub fn parse_uncompressed_sec(v: Vec<u8>) -> Secp256k1Point {
         if v.len() != 65 {
             panic!("bad length: expect　65 but got {}", v.len())

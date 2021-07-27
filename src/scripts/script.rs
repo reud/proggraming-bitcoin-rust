@@ -2,6 +2,7 @@ use crate::helper::helper::{encode_varint, read_varint};
 use crate::scripts::element::Element;
 use num_bigint::{BigInt, Sign};
 use std::io::{Cursor, Read};
+use std::ops::Add;
 
 pub enum Cmd {
     OperationCode(u8),
@@ -21,6 +22,7 @@ pub fn new_script(cmds: Vec<Cmd>) -> Script {
 }
 
 impl Script {
+    #[allow(dead_code)]
     #[allow(dead_code)]
     pub fn parse(c: &mut Cursor<Vec<u8>>) -> Script {
         let length = read_varint(c);
@@ -141,5 +143,15 @@ impl Script {
             }
         }
         return result;
+    }
+}
+
+impl Add for Script {
+    type Output = Script;
+
+    fn add(self, mut rhs: Script) -> Self::Output {
+        let mut cmds = self.cmds;
+        cmds.append(&mut rhs.cmds);
+        new_script(cmds)
     }
 }

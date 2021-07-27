@@ -1,6 +1,9 @@
 use std::fmt::{Display, Formatter};
 use std::fmt;
-use crate::ecc::secp256k1_scalar_element::{Secp256k1ScalarElement, new_secp256k1scalarelement_from_hex_str};
+use crate::ecc::secp256k1_scalar_element::{Secp256k1ScalarElement, new_secp256k1scalarelement_from_hex_str, new_secp256k1scalarelement};
+use std::io::{Cursor, Read};
+use crate::helper::helper::read_varint;
+use num_bigint::{BigInt, BigUint};
 
 pub struct Secp256k1Signature {
     pub(crate) r: Secp256k1ScalarElement,
@@ -21,6 +24,54 @@ impl Secp256k1Signature {
             ret += &*format!("{:02x}", v);
         }
         return ret;
+    }
+
+    #[allow(dead_code)]
+    pub fn parse(der_signature: Vec<u8>) -> Secp256k1Signature {
+        let mut s = Cursor::new(der_signature.clone());
+
+        let mut bytes = [0u8;1];
+        s.read(&mut bytes);
+        let compound = bytes[0];
+
+        if compound != 0x30 {
+            panic!("Bad Signature")
+        }
+
+        s.read(&mut bytes);
+        let length = bytes[0];
+        if (length + 2) as usize != der_signature.len() {
+            panic!("Bad Signature Length")
+        }
+
+        s.read(&mut bytes);
+        let marker = bytes[0];
+        if marker != 0x02 {
+            panic!("Bad Signature")
+        }
+
+        s.read(&mut bytes);
+        let rlength = bytes[0];
+
+        let mut sret: Vec<u8> = Vec::with_capacity(rlength as usize);
+        s.read(&mut *sret);
+        let r = BigUint::from_bytes_be(&*sret);
+        let r = new_secp256k1scalarelement(r);
+
+        s.read(&mut bytes);
+        let marker = bytes[0];
+        if marker != 0x02 {
+            panic!("Bad Signature")
+        }
+
+        s.read(&mut bytes);
+        let slength = bytes[0];
+
+        let mut sret: Vec<u8> = Vec::with_capacity(slength as usize);
+        s.read(&mut *sret);
+        let s = BigUint::from_bytes_be(&*sret);
+        let s = new_secp256k1scalarelement(s);
+        return new_secp256k1signature(r,s);
     }
 
     #[allow(dead_code)]

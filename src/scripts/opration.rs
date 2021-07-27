@@ -71,6 +71,7 @@ fn decode_num(element: Element) -> BigInt {
     return result;
 }
 
+// z: 署名ハッシュ
 pub enum Operation {
     NormalOperation(fn(&mut Stack<Element>) -> bool),
     AdditionalStackOperation(fn(&mut Stack<Element>, &mut Stack<Element>) -> bool),
@@ -1001,16 +1002,36 @@ impl Operations {
     }
 
     #[allow(dead_code)]
+    // z: 署名ハッシュ
     pub fn op_checksig(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
-        unimplemented!()
+        if stack.len() < 2 {
+            return false;
+        }
+        let sec_pubkey = stack.pop().unwrap();
+        let mut el = stack.pop().unwrap();
+        let sz = el.inner_data.len();
+        let bytes = &el.inner_data[..(sz-1)];
+        let der_signature = new_element_from_bytes(bytes.to_owned());
+
+        let point = Secp256k1Point::parse(sec_pubkey.inner_data);
+        let sig = Secp256k1Signature::parse(der_signature.inner_data);
+
+        if point.verify(z,sig)  {
+            stack.push(encode_num(BigInt::one()));
+        } else {
+            stack.push(encode_num(BigInt::zero()));
+        }
+        return true;
     }
 
     #[allow(dead_code)]
+    // z: 署名ハッシュ
     pub fn op_checksigverify(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
         return Operations::op_checksig(stack, z) && Operations::op_verify(stack);
     }
 
     #[allow(dead_code)]
+    // z: 署名ハッシュ
     pub fn op_checkmultisig(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
         unimplemented!()
     }
