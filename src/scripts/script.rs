@@ -151,13 +151,11 @@ impl Script {
     }
     #[allow(dead_code)]
     pub fn evaluate(&self, z: Secp256k1ScalarElement) -> bool {
-        let mut now_cmds_vec = self.cmds.clone();
-        now_cmds_vec.reverse();
-        let mut now_cmds: Stack<Cmd> = new_stack_with_default(now_cmds_vec);
+        let mut now_cmds = self.cmds.clone();
         let mut stack: Stack<Element> = new_stack();
         let mut alt_stack: Stack<Element> = new_stack();
         while now_cmds.len() > 0 {
-            let cmd = now_cmds.pop().unwrap();
+            let cmd = now_cmds.remove(0);
             match cmd {
                 Cmd::OperationCode(code) => {
                     let op = Operations::code_functions(code).unwrap();
@@ -223,6 +221,7 @@ mod tests {
     extern crate test;
 
     use super::*;
+    use crate::ecc::secp256k1_point::Secp256k1Point;
     use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement_from_hex_str;
     use crate::helper::helper;
     use std::num::ParseIntError;
@@ -233,7 +232,11 @@ mod tests {
             "7c076ff316692a3d7eb3c3bb0f8b1488cf72e1afcd929e29307032997a838a3d",
         )
         .unwrap();
-        let sec_pubkey = helper::decode_hex("04887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34").unwrap();
+
+        let s = "04887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34";
+        let sec_pubkey = helper::decode_hex(s).unwrap();
+        let p1 = Secp256k1Point::parse(sec_pubkey.clone());
+
         let sig = helper::decode_hex("3045022000eff69ef2b1bd93a66ed5219add4fb51e11a840f404876325a1e8ffe0529a2c022100c7207fee197d27c618aea621406f6bf5ef6fca38681d82b2f06fddbdce6feab601").unwrap();
 
         let pubkey_cmds: Vec<Cmd> = vec![Cmd::Element(sec_pubkey), Cmd::OperationCode(172)];
@@ -242,7 +245,6 @@ mod tests {
         let pubkey_script = new_script(pubkey_cmds);
         let sig_script = new_script(sig_cmds);
 
-        // TODO: ここがバグっているので直す
         let combined_script = sig_script + pubkey_script;
         assert_eq!(combined_script.evaluate(z), true);
     }

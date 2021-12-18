@@ -76,7 +76,7 @@ fn decode_num(element: Element) -> BigInt {
 pub enum Operation {
     NormalOperation(fn(&mut Stack<Element>) -> bool),
     AdditionalStackOperation(fn(&mut Stack<Element>, &mut Stack<Element>) -> bool),
-    AdditionalItemOperation(fn(stack: &mut Stack<Element>, items: &mut Stack<Cmd>) -> bool),
+    AdditionalItemOperation(fn(stack: &mut Stack<Element>, items: &mut Vec<Cmd>) -> bool),
     AdditionalScalarElementOperation(
         fn(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool,
     ),
@@ -256,12 +256,12 @@ impl Operations {
     }
 
     #[allow(dead_code)]
-    pub fn op_if(stack: &mut Stack<Element>, items: &mut Stack<Cmd>) -> bool {
+    pub fn op_if(stack: &mut Stack<Element>, items: &mut Vec<Cmd>) -> bool {
         if stack.is_empty() {
             return false;
         }
-        let mut true_items: Stack<Cmd> = new_stack();
-        let mut false_items: Stack<Cmd> = new_stack();
+        let mut true_items: Vec<Cmd> = vec![];
+        let mut false_items: Vec<Cmd> = vec![];
         let mut found = false;
         let mut num_endifs_needed = 1;
         let mut is_true_items = true;
@@ -328,12 +328,12 @@ impl Operations {
     }
 
     #[allow(dead_code)]
-    pub fn op_notif(stack: &mut Stack<Element>, items: &mut Stack<Cmd>) -> bool {
+    pub fn op_notif(stack: &mut Stack<Element>, items: &mut Vec<Cmd>) -> bool {
         if stack.is_empty() {
             return false;
         }
-        let mut true_items: Stack<Cmd> = new_stack();
-        let mut false_items: Stack<Cmd> = new_stack();
+        let mut true_items: Vec<Cmd> = vec![];
+        let mut false_items: Vec<Cmd> = vec![];
         let mut found = false;
         let mut num_endifs_needed = 1;
         let mut is_true_items = true;
@@ -1033,10 +1033,9 @@ impl Operations {
         let mut el = stack.pop().unwrap();
         let sz = el.inner_data.len();
         let bytes = &el.inner_data[..(sz - 1)];
-        let der_signature = new_element_from_bytes(bytes.to_owned());
 
         let point = Secp256k1Point::parse(sec_pubkey.inner_data);
-        let sig = Secp256k1Signature::parse(der_signature.inner_data);
+        let sig = Secp256k1Signature::parse(bytes.to_vec());
 
         if point.verify(z, sig) {
             stack.push(encode_num(BigInt::one()));

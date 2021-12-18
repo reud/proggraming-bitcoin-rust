@@ -78,7 +78,7 @@ impl Secp256k1Point {
         }
         let cons = v.split_first().unwrap();
         let pos_vec = cons.1;
-        let xy_vec: Vec<Vec<u8>> = pos_vec.chunks(2).map(|x| x.to_vec()).collect();
+        let xy_vec: Vec<Vec<u8>> = pos_vec.chunks(32).map(|x| x.to_vec()).collect();
         if xy_vec.len() != 2 {
             panic!("unknown error occuered(execute chunks(32),but cant get x,y positon)");
         }
