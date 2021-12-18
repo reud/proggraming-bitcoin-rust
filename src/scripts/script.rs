@@ -227,7 +227,7 @@ mod tests {
     use std::num::ParseIntError;
 
     #[test]
-    fn test_pspk_script() {
+    fn test_p2pk_script() {
         let z = new_secp256k1scalarelement_from_hex_str(
             "7c076ff316692a3d7eb3c3bb0f8b1488cf72e1afcd929e29307032997a838a3d",
         )
