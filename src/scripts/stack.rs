@@ -1,7 +1,8 @@
+use crate::scripts::script::Cmd;
 
-#[derive(Debug,Clone,Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Stack<T> {
-    stack: Vec<T>
+    stack: Vec<T>,
 }
 
 impl<T: std::clone::Clone> Stack<T> {
@@ -29,19 +30,20 @@ impl<T: std::clone::Clone> Stack<T> {
     pub fn erase(&mut self, index: usize) -> T {
         self.stack.remove(index)
     }
-}
-
-fn new_stack<T: Clone>() -> Stack<T> {
-    let stack: Vec<T> = Vec::new();
-    Stack {
-        stack
+    pub fn clear(&mut self) {
+        self.stack.clear()
     }
 }
 
+pub fn new_stack<T: Clone>() -> Stack<T> {
+    let stack: Vec<T> = Vec::new();
+    Stack { stack }
+}
+
 #[allow(dead_code)]
-fn new_stack_with_default<T: Clone>( stack: &mut Vec<T>) -> Stack<T> {
+pub fn new_stack_with_default<T: Clone>(stack: Vec<T>) -> Stack<T> {
     Stack {
-        stack: stack.clone()
+        stack: stack.clone(),
     }
 }
 
@@ -57,8 +59,8 @@ mod tests {
         s.push(3);
         s.push(2);
         s.push(1);
-        assert_eq!(s.pop().unwrap(),1);
-        assert_eq!(s.pop().unwrap(),2);
-        assert_eq!(s.pop().unwrap(),3);
+        assert_eq!(s.pop().unwrap(), 1);
+        assert_eq!(s.pop().unwrap(), 2);
+        assert_eq!(s.pop().unwrap(), 3);
     }
 }

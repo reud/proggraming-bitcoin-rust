@@ -1,9 +1,14 @@
+use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 use crate::helper::helper::{encode_varint, read_varint};
-use crate::scripts::element::Element;
+use crate::scripts::element::{new_element, new_element_from_bytes, Element};
+use crate::scripts::operation::{Operation, Operations};
+use crate::scripts::stack::Stack;
+use crate::scripts::stack::{new_stack, new_stack_with_default};
 use num_bigint::{BigInt, Sign};
 use std::io::{Cursor, Read};
 use std::ops::Add;
 
+#[derive(Clone)]
 pub enum Cmd {
     OperationCode(u8),
     Element(Vec<u8>),
@@ -144,6 +149,63 @@ impl Script {
         }
         return result;
     }
+    #[allow(dead_code)]
+    pub fn evaluate(&self, z: Secp256k1ScalarElement) -> bool {
+        let mut now_cmds_vec = self.cmds.clone();
+        now_cmds_vec.reverse();
+        let mut now_cmds: Stack<Cmd> = new_stack_with_default(now_cmds_vec);
+        let mut stack: Stack<Element> = new_stack();
+        let mut alt_stack: Stack<Element> = new_stack();
+        while now_cmds.len() > 0 {
+            let cmd = now_cmds.pop().unwrap();
+            match cmd {
+                Cmd::OperationCode(code) => {
+                    let op = Operations::code_functions(code).unwrap();
+                    match op {
+                        Operation::NormalOperation(op) => {
+                            let operation_result = op(&mut stack);
+                            if !operation_result {
+                                println!("bad operation. code: {}", code);
+                                return false;
+                            }
+                        }
+                        Operation::AdditionalStackOperation(op) => {
+                            let operation_result = op(&mut stack, &mut alt_stack);
+                            if !operation_result {
+                                println!("bad operation. code: {}", code);
+                                return false;
+                            }
+                        }
+                        Operation::AdditionalItemOperation(op) => {
+                            let operation_result = op(&mut stack, &mut now_cmds);
+                            if !operation_result {
+                                println!("bad operation. code: {}", code);
+                                return false;
+                            }
+                        }
+                        Operation::AdditionalScalarElementOperation(op) => {
+                            // let operation_result = op(&mut stack, z.clone());
+                            let operation_result = Operations::op_checksig(&mut stack, z.clone());
+                            if !operation_result {
+                                println!("bad operation. code: {}", code);
+                                return false;
+                            }
+                        }
+                    }
+                }
+                Cmd::Element(bytes) => {
+                    stack.push(new_element_from_bytes(bytes));
+                }
+            }
+        }
+        if stack.len() == 0 {
+            return false;
+        }
+        if stack.pop().unwrap() == new_element() {
+            return false;
+        }
+        return true;
+    }
 }
 
 impl Add for Script {
@@ -153,5 +215,35 @@ impl Add for Script {
         let mut cmds = self.cmds;
         cmds.append(&mut rhs.cmds);
         new_script(cmds)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    extern crate test;
+
+    use super::*;
+    use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement_from_hex_str;
+    use crate::helper::helper;
+    use std::num::ParseIntError;
+
+    #[test]
+    fn test_pspk_script() {
+        let z = new_secp256k1scalarelement_from_hex_str(
+            "7c076ff316692a3d7eb3c3bb0f8b1488cf72e1afcd929e29307032997a838a3d",
+        )
+        .unwrap();
+        let sec_pubkey = helper::decode_hex("04887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34").unwrap();
+        let sig = helper::decode_hex("3045022000eff69ef2b1bd93a66ed5219add4fb51e11a840f404876325a1e8ffe0529a2c022100c7207fee197d27c618aea621406f6bf5ef6fca38681d82b2f06fddbdce6feab601").unwrap();
+
+        let pubkey_cmds: Vec<Cmd> = vec![Cmd::Element(sec_pubkey), Cmd::OperationCode(172)];
+        let sig_cmds: Vec<Cmd> = vec![Cmd::Element(sig)];
+
+        let pubkey_script = new_script(pubkey_cmds);
+        let sig_script = new_script(sig_cmds);
+
+        // TODO: ここがバグっているので直す
+        let combined_script = sig_script + pubkey_script;
+        assert_eq!(combined_script.evaluate(z), true);
     }
 }

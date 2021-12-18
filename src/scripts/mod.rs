@@ -1,6 +1,4 @@
-
 mod element;
-mod opration;
-mod stack;
+mod operation;
 mod script;
-
+mod stack;

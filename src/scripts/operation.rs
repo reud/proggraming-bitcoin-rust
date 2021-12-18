@@ -2,12 +2,13 @@ use crate::ecc::secp256k1_point::Secp256k1Point;
 use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 use crate::ecc::secp256k1_signature::Secp256k1Signature;
 use crate::scripts::element::{new_element, new_element_from_bytes, Element};
-use crate::scripts::opration::Operation::{
+use crate::scripts::operation::Operation::{
     AdditionalItemOperation, AdditionalScalarElementOperation, AdditionalStackOperation,
     NormalOperation,
 };
+use crate::scripts::script::Cmd;
 use crate::scripts::script::Cmd::OperationCode;
-use crate::scripts::stack::Stack;
+use crate::scripts::stack::{new_stack, Stack};
 use core::num::FpCategory::Normal;
 use num_bigint::{BigInt, BigUint};
 use num_traits::{One, Signed, ToPrimitive, Zero};
@@ -75,11 +76,10 @@ fn decode_num(element: Element) -> BigInt {
 pub enum Operation {
     NormalOperation(fn(&mut Stack<Element>) -> bool),
     AdditionalStackOperation(fn(&mut Stack<Element>, &mut Stack<Element>) -> bool),
-    AdditionalItemOperation(fn(stack: &mut Stack<Element>, items: &mut Vec<u8>) -> bool),
+    AdditionalItemOperation(fn(stack: &mut Stack<Element>, items: &mut Stack<Cmd>) -> bool),
     AdditionalScalarElementOperation(
         fn(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool,
     ),
-    AdditionalInfoOperation(fn(&mut Stack<Element>, u32, u32) -> bool),
 }
 
 impl Operations {
@@ -256,44 +256,55 @@ impl Operations {
     }
 
     #[allow(dead_code)]
-    pub fn op_if(stack: &mut Stack<Element>, items: &mut Vec<u8>) -> bool {
+    pub fn op_if(stack: &mut Stack<Element>, items: &mut Stack<Cmd>) -> bool {
         if stack.is_empty() {
             return false;
         }
-        let mut true_items: Vec<u8> = vec![];
-        let mut false_items: Vec<u8> = vec![];
+        let mut true_items: Stack<Cmd> = new_stack();
+        let mut false_items: Stack<Cmd> = new_stack();
         let mut found = false;
         let mut num_endifs_needed = 1;
         let mut is_true_items = true;
 
         while items.len() > 0 {
-            let item = items.remove(0);
-            if item == 99 || item == 100 {
-                num_endifs_needed += 1;
-                if is_true_items {
-                    true_items.push(item);
-                } else {
-                    false_items.push(item);
-                }
-            } else if num_endifs_needed == 1 && item == 103 {
-                is_true_items = false;
-            } else if item == 104 {
-                if num_endifs_needed == 1 {
-                    found = true;
-                    break;
-                } else {
-                    num_endifs_needed -= 1;
-                    if is_true_items {
-                        true_items.push(item);
+            let item = items.pop().unwrap();
+            match item {
+                OperationCode(code) => {
+                    if code == 99 || code == 100 {
+                        num_endifs_needed += 1;
+                        if is_true_items {
+                            true_items.push(item);
+                        } else {
+                            false_items.push(item);
+                        }
+                    } else if code == 103 && num_endifs_needed == 1 {
+                        is_true_items = false;
+                    } else if code == 104 {
+                        if num_endifs_needed == 1 {
+                            found = true;
+                            break;
+                        } else {
+                            num_endifs_needed -= 1;
+                            if is_true_items {
+                                true_items.push(item);
+                            } else {
+                                false_items.push(item);
+                            }
+                        }
                     } else {
-                        false_items.push(item);
+                        if is_true_items {
+                            true_items.push(item);
+                        } else {
+                            false_items.push(item);
+                        }
                     }
                 }
-            } else {
-                if is_true_items {
-                    true_items.push(item);
-                } else {
-                    false_items.push(item);
+                Cmd::Element(ref el) => {
+                    if is_true_items {
+                        true_items.push(item.clone());
+                    } else {
+                        false_items.push(item.clone());
+                    }
                 }
             }
         }
@@ -304,12 +315,12 @@ impl Operations {
         let element = stack.pop().unwrap();
         items.clear();
         if decode_num(element) == BigInt::zero() {
-            for v in false_items.into_iter() {
-                items.push(v);
+            while false_items.len() > 0 {
+                items.push(false_items.pop().unwrap())
             }
         } else {
-            for v in true_items.into_iter() {
-                items.push(v);
+            while true_items.len() > 0 {
+                items.push(true_items.pop().unwrap())
             }
         }
 
@@ -317,44 +328,56 @@ impl Operations {
     }
 
     #[allow(dead_code)]
-    pub fn op_notif(stack: &mut Stack<Element>, items: &mut Vec<u8>) -> bool {
+    pub fn op_notif(stack: &mut Stack<Element>, items: &mut Stack<Cmd>) -> bool {
         if stack.is_empty() {
             return false;
         }
-        let mut true_items: Vec<u8> = vec![];
-        let mut false_items: Vec<u8> = vec![];
+        let mut true_items: Stack<Cmd> = new_stack();
+        let mut false_items: Stack<Cmd> = new_stack();
         let mut found = false;
         let mut num_endifs_needed = 1;
         let mut is_true_items = true;
 
         while items.len() > 0 {
-            let item = items.remove(0);
-            if item == 99 || item == 100 {
-                num_endifs_needed += 1;
-                if is_true_items {
-                    true_items.push(item);
-                } else {
-                    false_items.push(item);
-                }
-            } else if num_endifs_needed == 1 && item == 103 {
-                is_true_items = false;
-            } else if item == 104 {
-                if num_endifs_needed == 1 {
-                    found = true;
-                    break;
-                } else {
-                    num_endifs_needed -= 1;
-                    if is_true_items {
-                        true_items.push(item);
+            let item = items.pop().unwrap();
+
+            match item {
+                OperationCode(code) => {
+                    if code == 99 || code == 100 {
+                        num_endifs_needed += 1;
+                        if is_true_items {
+                            true_items.push(item);
+                        } else {
+                            false_items.push(item);
+                        }
+                    } else if code == 103 && num_endifs_needed == 1 {
+                        is_true_items = false;
+                    } else if code == 104 {
+                        if num_endifs_needed == 1 {
+                            found = true;
+                            break;
+                        } else {
+                            num_endifs_needed -= 1;
+                            if is_true_items {
+                                true_items.push(item);
+                            } else {
+                                false_items.push(item);
+                            }
+                        }
                     } else {
-                        false_items.push(item);
+                        if is_true_items {
+                            true_items.push(item);
+                        } else {
+                            false_items.push(item);
+                        }
                     }
                 }
-            } else {
-                if is_true_items {
-                    true_items.push(item);
-                } else {
-                    false_items.push(item);
+                Cmd::Element(ref el) => {
+                    if is_true_items {
+                        true_items.push(item.clone());
+                    } else {
+                        false_items.push(item.clone());
+                    }
                 }
             }
         }
@@ -364,16 +387,15 @@ impl Operations {
         }
         let element = stack.pop().unwrap();
         items.clear();
-        if decode_num(element) == BigInt::zero() {
-            for v in true_items.into_iter() {
-                items.push(v);
+        if !(decode_num(element) == BigInt::zero()) {
+            while false_items.len() > 0 {
+                items.push(false_items.pop().unwrap())
             }
         } else {
-            for v in false_items.into_iter() {
-                items.push(v);
+            while true_items.len() > 0 {
+                items.push(true_items.pop().unwrap())
             }
         }
-
         return true;
     }
 
@@ -1010,13 +1032,13 @@ impl Operations {
         let sec_pubkey = stack.pop().unwrap();
         let mut el = stack.pop().unwrap();
         let sz = el.inner_data.len();
-        let bytes = &el.inner_data[..(sz-1)];
+        let bytes = &el.inner_data[..(sz - 1)];
         let der_signature = new_element_from_bytes(bytes.to_owned());
 
         let point = Secp256k1Point::parse(sec_pubkey.inner_data);
         let sig = Secp256k1Signature::parse(der_signature.inner_data);
 
-        if point.verify(z,sig)  {
+        if point.verify(z, sig) {
             stack.push(encode_num(BigInt::one()));
         } else {
             stack.push(encode_num(BigInt::zero()));
@@ -1060,7 +1082,7 @@ impl Operations {
 mod tests {
     extern crate test;
 
-    use crate::scripts::opration::{decode_num, encode_num};
+    use crate::scripts::operation::{decode_num, encode_num};
     use num_bigint::BigInt;
 
     #[test]
