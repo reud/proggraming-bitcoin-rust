@@ -20,7 +20,7 @@ impl Display for Secp256k1Signature {
 
 impl Secp256k1Signature {
     #[allow(dead_code)]
-    fn der_str(self) -> String {
+    pub fn der_str(self) -> String {
         let mut ret = "".to_string();
         for v in self.der() {
             ret += &*format!("{:02x}", v);
@@ -43,7 +43,11 @@ impl Secp256k1Signature {
         s.read(&mut bytes);
         let length = bytes[0];
         if (length + 2) as usize != der_signature.len() {
-            panic!("Bad Signature Length")
+            panic!(
+                "Bad Signature Length, expected: (len+2): {} , but got: {}",
+                length + 2,
+                der_signature.len()
+            )
         }
 
         s.read(&mut bytes);
@@ -77,7 +81,7 @@ impl Secp256k1Signature {
     }
 
     #[allow(dead_code)]
-    fn der(self) -> Vec<u8> {
+    pub fn der(self) -> Vec<u8> {
         let prefix_marker = 0x30u8;
         let r_bytes = self.r.num.to_bytes_be();
         let s_bytes = self.s.num.to_bytes_be();

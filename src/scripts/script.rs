@@ -222,8 +222,14 @@ mod tests {
 
     use super::*;
     use crate::ecc::secp256k1_point::Secp256k1Point;
-    use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement_from_hex_str;
+    use crate::ecc::secp256k1_privatekey::new_secp_256k1privatekey;
+    use crate::ecc::secp256k1_scalar_element::{
+        new_secp256k1scalarelement_from_hex_str, new_secp256k1scalarelement_from_i32,
+    };
     use crate::helper::helper;
+    use crate::helper::helper::hash160;
+    use crate::scripts::script::Cmd::OperationCode;
+    use crypto_hash::{digest, hex_digest, Algorithm};
     use std::num::ParseIntError;
 
     #[test]
@@ -247,5 +253,42 @@ mod tests {
 
         let combined_script = sig_script + pubkey_script;
         assert_eq!(combined_script.evaluate(z), true);
+    }
+
+    #[test]
+    fn test_p2pkh_script() {
+        // secret
+        let e = new_secp256k1scalarelement_from_i32(12345);
+
+        // 秘密鍵
+        let pk = new_secp_256k1privatekey(e);
+        // 公開鍵の圧縮sec
+        let compressed_public_sec = pk.clone().point.compressed_sec();
+        let compressed_public_sec_hashed = hash160(compressed_public_sec.clone());
+        // 署名先
+        let z = digest(Algorithm::SHA256, b"Programming Bitcoin!");
+        let z = hex_digest(Algorithm::SHA256, &*z);
+        let z = new_secp256k1scalarelement_from_hex_str(&*z).unwrap();
+        let sig = pk.clone().sign(z.clone());
+        let mut sig = sig.der();
+        sig.push(1); // <signature>はDER署名+sighash(01) で表す
+        let script_pub_key_cmds: Vec<Cmd> = vec![
+            OperationCode(118),                         // OP_DUP
+            OperationCode(169),                         // OP_HASH160
+            Cmd::Element(compressed_public_sec_hashed), // <hash>
+            OperationCode(136),                         // OP_EQUALVERIFY
+            OperationCode(172),                         // OP_CHECKSIG
+        ];
+
+        let script_sig_cmds: Vec<Cmd> = vec![
+            Cmd::Element(sig),
+            Cmd::Element(compressed_public_sec.clone()),
+        ];
+
+        let pubkey_script = new_script(script_pub_key_cmds);
+        let sig_script = new_script(script_sig_cmds);
+
+        let combined_script = sig_script + pubkey_script;
+        assert_eq!(combined_script.evaluate(z.clone()), true);
     }
 }
