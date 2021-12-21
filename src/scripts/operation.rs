@@ -69,6 +69,7 @@ pub enum OperationCodes {
     Op0notequal,
     OpAdd,
     OpSub,
+    OpMul,
     OpBooland = 154,
     OpBoolor,
     OpNumequal,
@@ -92,6 +93,7 @@ pub enum OperationCodes {
 #[allow(dead_code)]
 pub struct Operations {}
 
+#[allow(dead_code)]
 fn encode_num(num: BigInt) -> Element {
     if num == BigInt::zero() {
         return new_element();
@@ -215,6 +217,7 @@ impl Operations {
             146 => Some(NormalOperation(Operations::op_0notequal)),
             147 => Some(NormalOperation(Operations::op_add)),
             148 => Some(NormalOperation(Operations::op_sub)),
+            149 => Some(NormalOperation(Operations::op_mul)),
             154 => Some(NormalOperation(Operations::op_booland)),
             155 => Some(NormalOperation(Operations::op_boolor)),
             156 => Some(NormalOperation(Operations::op_numequal)),
@@ -873,6 +876,17 @@ impl Operations {
         let el1 = stack.pop().unwrap();
         let el2 = stack.pop().unwrap();
         stack.push(el1 - el2);
+        return true;
+    }
+
+    #[allow(dead_code)]
+    pub fn op_mul(stack: &mut Stack<Element>) -> bool {
+        if stack.len() < 2 {
+            return false;
+        }
+        let el1 = stack.pop().unwrap();
+        let el2 = stack.pop().unwrap();
+        stack.push(el1 * el2);
         return true;
     }
 

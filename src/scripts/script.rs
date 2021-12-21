@@ -2,8 +2,8 @@ use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 use crate::helper::helper::{encode_varint, read_varint};
 use crate::scripts::element::{new_element, new_element_from_bytes, Element};
 use crate::scripts::operation::{Operation, Operations};
+use crate::scripts::stack::new_stack;
 use crate::scripts::stack::Stack;
-use crate::scripts::stack::{new_stack};
 
 use std::io::{Cursor, Read};
 use std::ops::Add;
@@ -229,10 +229,9 @@ mod tests {
     use crate::helper::helper;
     use crate::helper::helper::hash160;
     use crate::scripts::operation::OperationCodes;
-    
+
     use crate::scripts::script::Cmd::OperationCode;
     use crypto_hash::{digest, hex_digest, Algorithm};
-    
 
     #[test]
     fn test_p2pk_script() {
@@ -307,6 +306,27 @@ mod tests {
         ]);
 
         let sig_script = new_script(vec![OperationCode(OperationCodes::Op4 as u8)]);
+
+        let combined_script = sig_script + pubkey_script;
+        assert_eq!(
+            combined_script.evaluate(new_secp256k1scalarelement_from_i32(0)),
+            true
+        );
+    }
+
+    #[test]
+    fn test_p133q3_script() {
+        // question
+        let pubkey_script = new_script(vec![
+            OperationCode(OperationCodes::OpDup as u8),
+            OperationCode(OperationCodes::OpDup as u8),
+            OperationCode(OperationCodes::OpMul as u8),
+            OperationCode(OperationCodes::OpAdd as u8),
+            OperationCode(OperationCodes::Op6 as u8),
+            OperationCode(OperationCodes::OpEqual as u8),
+        ]);
+        // answer
+        let sig_script = new_script(vec![OperationCode(OperationCodes::Op2 as u8)]);
 
         let combined_script = sig_script + pubkey_script;
         assert_eq!(
