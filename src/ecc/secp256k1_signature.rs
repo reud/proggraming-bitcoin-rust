@@ -1,8 +1,8 @@
 use crate::ecc::secp256k1_scalar_element::{
     new_secp256k1scalarelement, new_secp256k1scalarelement_from_hex_str, Secp256k1ScalarElement,
 };
-use crate::helper::helper::read_varint;
-use num_bigint::{BigInt, BigUint};
+
+use num_bigint::{BigUint};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};

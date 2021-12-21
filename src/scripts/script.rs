@@ -3,8 +3,8 @@ use crate::helper::helper::{encode_varint, read_varint};
 use crate::scripts::element::{new_element, new_element_from_bytes, Element};
 use crate::scripts::operation::{Operation, Operations};
 use crate::scripts::stack::Stack;
-use crate::scripts::stack::{new_stack, new_stack_with_default};
-use num_bigint::{BigInt, Sign};
+use crate::scripts::stack::{new_stack};
+
 use std::io::{Cursor, Read};
 use std::ops::Add;
 
@@ -181,7 +181,7 @@ impl Script {
                                 return false;
                             }
                         }
-                        Operation::AdditionalScalarElementOperation(op) => {
+                        Operation::AdditionalScalarElementOperation(_op) => {
                             // let operation_result = op(&mut stack, z.clone());
                             let operation_result = Operations::op_checksig(&mut stack, z.clone());
                             if !operation_result {
@@ -229,10 +229,10 @@ mod tests {
     use crate::helper::helper;
     use crate::helper::helper::hash160;
     use crate::scripts::operation::OperationCodes;
-    use crate::scripts::operation::OperationCodes::OpReturn;
+    
     use crate::scripts::script::Cmd::OperationCode;
     use crypto_hash::{digest, hex_digest, Algorithm};
-    use std::num::ParseIntError;
+    
 
     #[test]
     fn test_p2pk_script() {
@@ -243,7 +243,7 @@ mod tests {
 
         let s = "04887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34";
         let sec_pubkey = helper::decode_hex(s).unwrap();
-        let p1 = Secp256k1Point::parse(sec_pubkey.clone());
+        let _p1 = Secp256k1Point::parse(sec_pubkey.clone());
 
         let sig = helper::decode_hex("3045022000eff69ef2b1bd93a66ed5219add4fb51e11a840f404876325a1e8ffe0529a2c022100c7207fee197d27c618aea621406f6bf5ef6fca38681d82b2f06fddbdce6feab601").unwrap();
 

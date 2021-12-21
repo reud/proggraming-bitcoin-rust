@@ -8,11 +8,12 @@ use crate::scripts::operation::Operation::{
 };
 use crate::scripts::script::Cmd;
 use crate::scripts::script::Cmd::OperationCode;
-use crate::scripts::stack::{new_stack, Stack};
-use core::num::FpCategory::Normal;
+use crate::scripts::stack::Stack;
+
 use num_bigint::{BigInt, BigUint};
 use num_traits::{One, Signed, ToPrimitive, Zero};
 
+#[allow(dead_code)]
 #[repr(u8)]
 pub enum OperationCodes {
     Op0 = 0,
@@ -326,7 +327,7 @@ impl Operations {
         return true;
     }
     #[allow(dead_code)]
-    pub fn op_nop(stack: &mut Stack<Element>) -> bool {
+    pub fn op_nop(_stack: &mut Stack<Element>) -> bool {
         return true;
     }
 
@@ -374,7 +375,7 @@ impl Operations {
                         }
                     }
                 }
-                Cmd::Element(ref el) => {
+                Cmd::Element(ref _el) => {
                     if is_true_items {
                         true_items.push(item.clone());
                     } else {
@@ -447,7 +448,7 @@ impl Operations {
                         }
                     }
                 }
-                Cmd::Element(ref el) => {
+                Cmd::Element(ref _el) => {
                     if is_true_items {
                         true_items.push(item.clone());
                     } else {
@@ -1105,7 +1106,7 @@ impl Operations {
             return false;
         }
         let sec_pubkey = stack.pop().unwrap();
-        let mut el = stack.pop().unwrap();
+        let el = stack.pop().unwrap();
         let sz = el.inner_data.len();
         let bytes = &el.inner_data[..(sz - 1)];
 
@@ -1128,7 +1129,7 @@ impl Operations {
 
     #[allow(dead_code)]
     // z: 署名ハッシュ
-    pub fn op_checkmultisig(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
+    pub fn op_checkmultisig(_stack: &mut Stack<Element>, _z: Secp256k1ScalarElement) -> bool {
         unimplemented!()
     }
 
@@ -1139,15 +1140,19 @@ impl Operations {
 
     #[allow(dead_code)]
     pub fn op_checklocktimeverify(
-        stack: &mut Stack<Element>,
-        locktime: u32,
-        sequence: u32,
+        _stack: &mut Stack<Element>,
+        _locktime: u32,
+        _sequence: u32,
     ) -> bool {
         unimplemented!()
     }
 
     #[allow(dead_code)]
-    pub fn op_checksequenceverify(stack: &mut Stack<Element>, version: u32, sequence: u32) -> bool {
+    pub fn op_checksequenceverify(
+        _stack: &mut Stack<Element>,
+        _version: u32,
+        _sequence: u32,
+    ) -> bool {
         unimplemented!()
     }
 }
