@@ -1,4 +1,4 @@
 mod element;
 mod operation;
-mod script;
+pub(crate) mod script;
 mod stack;

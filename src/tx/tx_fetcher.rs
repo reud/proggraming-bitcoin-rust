@@ -1,12 +1,12 @@
-use num_bigint::BigUint;
+use crate::helper::helper::{biguint_to_32_bytes_le, u8vec_to_str};
 use crate::tx::tx::Tx;
-use std::io::{Read, Cursor};
-use std::num::ParseIntError;
+use num_bigint::BigUint;
 use std::fmt::Write;
+use std::io::{Cursor, Read};
+use std::num::ParseIntError;
 
-#[derive(Debug,Clone)]
-pub struct TxFetcher {
-}
+#[derive(Debug, Clone)]
+pub struct TxFetcher {}
 
 #[allow(dead_code)]
 pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
@@ -28,16 +28,19 @@ impl TxFetcher {
     #[allow(dead_code)]
     pub fn get_url(testnet: bool) -> &'static str {
         return if testnet {
-            "http://testnet.programmingbitcoin.com"
+            "https://blockstream.info/testnet/api"
         } else {
-            "http://mainnet.programmingbitcoin.com"
-        }
+            "https://blockstream.info/api"
+        };
     }
 
     // TODO: cache
     #[allow(dead_code)]
     pub fn fetch(tx_id: BigUint, testnet: bool) -> Tx {
-        let url = format!("{}/tx/{}.hex",TxFetcher::get_url(testnet),tx_id);
+        let tx_id_str = tx_id.clone().to_str_radix(16);
+        println!("hex: {}", tx_id_str);
+        let url = format!("{}/tx/{}/hex", TxFetcher::get_url(testnet), tx_id_str);
+        println!("url: {}", url.clone());
         let response = reqwest::blocking::get(url);
         if response.is_err() {
             panic!("{}", response.err().unwrap())
@@ -48,7 +51,8 @@ impl TxFetcher {
             panic!("failed to read_string (body)")
         }
 
-        println!("{}",body.is_empty());
+        // body.pop(); // remove newline(\n)
+        println!("{}", body.is_empty());
         let hex = decode_hex(&*body).unwrap();
 
         let mut tx;
@@ -67,13 +71,10 @@ impl TxFetcher {
             let mut cursor = Cursor::new(hex.clone());
             tx = Tx::parse(testnet, &mut cursor);
         }
-
-
-
-        let tx_id_str = tx_id.to_str_radix(16);
+        println!("tx2info: \n{}", tx);
         let id = tx.clone().id();
-        if id !=tx_id_str {
-            panic!("not the same id: {} vs {}", id,tx_id_str);
+        if id != tx_id_str {
+            panic!("not the same id: {} vs {}", id, tx_id_str);
         }
 
         return tx;

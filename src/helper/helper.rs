@@ -1,9 +1,9 @@
+use crypto::digest::Digest as D;
+use crypto::sha1::Sha1;
 use num_bigint::BigUint;
 use ripemd160::{Digest, Ripemd160};
 use std::io::{Cursor, Read};
 use std::num::ParseIntError;
-use crypto::sha1::Sha1;
-use crypto::digest::Digest as D;
 
 #[allow(dead_code)]
 pub fn hash256(v: Vec<u8>) -> Vec<u8> {
@@ -14,7 +14,7 @@ pub fn hash256(v: Vec<u8>) -> Vec<u8> {
 
 #[allow(dead_code)]
 pub fn sha256(v: Vec<u8>) -> Vec<u8> {
-    crypto_hash::digest(crypto_hash::Algorithm::SHA256,&*v)
+    crypto_hash::digest(crypto_hash::Algorithm::SHA256, &*v)
 }
 
 #[allow(dead_code)]
@@ -34,11 +34,10 @@ pub fn ripemd160(v: Vec<u8>) -> Vec<u8> {
 pub fn sha1(v: Vec<u8>) -> Vec<u8> {
     let mut hasher = Sha1::new();
     hasher.input(&*v);
-    let mut ret:Vec<u8> = vec![];
+    let mut ret: Vec<u8> = vec![];
     hasher.result(&mut *ret);
     return ret;
 }
-
 
 // for test
 #[allow(dead_code)]
@@ -154,10 +153,15 @@ pub fn biguint_to_32_bytes_le(num: BigUint) -> [u8; 32] {
     if bin.len() > 32 {
         return ret;
     }
-    let mut i = bin.len();
+    let mut i = 0;
     while i < bin.len() {
         ret[i] = bin[i];
         i += 1;
     }
     return ret;
+}
+
+// ref: https://stackoverflow.com/questions/21747136/how-do-i-print-the-type-of-a-variable-in-rust
+pub fn str_type_of<T>(_: &T) -> String {
+    format!("{}", std::any::type_name::<T>())
 }

@@ -1,19 +1,23 @@
 use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
-use crate::helper::helper::{encode_varint, read_varint};
+use crate::helper::helper::{encode_varint, read_varint, u8vec_to_str};
 use crate::scripts::element::{new_element, new_element_from_bytes, Element};
-use crate::scripts::operation::{Operation, Operations};
+use crate::scripts::operation::{Operation, OperationCodes, Operations};
 use crate::scripts::stack::new_stack;
 use crate::scripts::stack::Stack;
+use std::fmt;
+use std::fmt::{Display, Formatter};
 
+use crate::helper;
 use std::io::{Cursor, Read};
 use std::ops::Add;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Cmd {
     OperationCode(u8),
     Element(Vec<u8>),
 }
 
+#[derive(Debug, Clone)]
 pub struct Script {
     cmds: Vec<Cmd>,
 }
@@ -213,6 +217,27 @@ impl Add for Script {
         let mut cmds = self.cmds;
         cmds.append(&mut rhs.cmds);
         new_script(cmds)
+    }
+}
+
+impl Display for Script {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Script[{}]",
+            self.cmds
+                .iter()
+                .map(|cmd| match cmd {
+                    Cmd::OperationCode(code) => {
+                        let method = Operations::code_functions(*code).unwrap();
+                        format!("{}, ", helper::helper::str_type_of(&method))
+                    }
+                    Cmd::Element(el) => {
+                        format!("Element<{}>, ", u8vec_to_str(el.clone()))
+                    }
+                })
+                .collect::<String>()
+        )
     }
 }
 

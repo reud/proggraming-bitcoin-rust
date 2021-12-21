@@ -1,16 +1,16 @@
-use crate::helper::helper::{biguint_to_32_bytes_le, read_varint};
+use crate::helper::helper::{biguint_to_32_bytes_le, read_varint, u8vec_to_str};
+use crate::scripts::script::Script;
 use crate::tx::tx::Tx;
 use crate::tx::tx_fetcher::TxFetcher;
 use num_bigint::BigUint;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
-
 #[derive(Debug, Clone)]
 pub struct TxIn {
     pub(crate) prev_transaction_id: BigUint,
     pub(crate) prev_transaction_index: u32,
-    pub(crate) script_sig: Vec<u8>,
+    pub(crate) script_sig: Script,
     sequence: u32,
 }
 
@@ -34,7 +34,9 @@ impl TxIn {
         for x in self.prev_transaction_index.to_le_bytes().iter() {
             v.push(*x);
         }
-        v.append(&mut self.script_sig);
+        for x in self.script_sig.serialize().iter() {
+            v.push(*x);
+        }
         let sequence = self.sequence.to_le_bytes();
         for x in sequence.iter() {
             v.push(*x);
@@ -55,17 +57,7 @@ impl TxIn {
 
         let prev_transaction_index = u32::from_le_bytes(prev_transaction_index);
 
-        let script_sig_sz = read_varint(c);
-
-        println!("script_sz: {}", script_sig_sz);
-
-        let mut script_sig = vec![0u8; script_sig_sz as usize];
-
-        if c.read(&mut *script_sig).is_err() {
-            panic!("failed to read script_sig")
-        }
-
-        println!("script_sig: {:x?}", &script_sig[..]);
+        let mut script_sig = Script::parse(c);
 
         let mut sequence = [0u8; 4];
         if c.read(&mut sequence).is_err() {
@@ -88,7 +80,8 @@ impl Display for TxIn {
         write!(
             f,
             "{}:{}",
-            self.prev_transaction_id, self.prev_transaction_index
+            self.prev_transaction_id.to_str_radix(16),
+            self.prev_transaction_index
         )
     }
 }

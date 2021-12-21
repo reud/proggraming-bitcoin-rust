@@ -1,4 +1,5 @@
 use crate::helper::helper::{read_varint, u8vec_to_str};
+use crate::scripts::script::Script;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
@@ -6,7 +7,7 @@ use std::io::{Cursor, Read};
 #[derive(Debug, Clone)]
 pub struct TxOut {
     pub(crate) amount: u64,
-    pub(crate) script_pub_key: Vec<u8>,
+    pub(crate) script_pub_key: Script,
 }
 
 impl TxOut {
@@ -15,7 +16,9 @@ impl TxOut {
         for x in self.amount.to_le_bytes().iter() {
             v.push(*x);
         }
-        v.append(&mut self.script_pub_key);
+        for x in self.script_pub_key.serialize().iter() {
+            v.push(*x);
+        }
         return v;
     }
 
@@ -26,11 +29,7 @@ impl TxOut {
         }
         let amount = u64::from_le_bytes(amount);
 
-        let script_pub_key_sz = read_varint(c);
-        let mut script_pub_key = vec![0u8; script_pub_key_sz as usize];
-        if c.read(&mut script_pub_key).is_err() {
-            panic!("failed to read script_pub_key")
-        }
+        let script_pub_key = Script::parse(c);
 
         return TxOut {
             amount,
@@ -44,8 +43,7 @@ impl Display for TxOut {
         write!(
             f,
             "  amount: {}\n  script_pub_key: {}",
-            self.amount,
-            u8vec_to_str(self.clone().script_pub_key)
+            self.amount, self.script_pub_key
         )
     }
 }
