@@ -296,4 +296,22 @@ mod tests {
         let combined_script = sig_script + pubkey_script;
         assert_eq!(combined_script.evaluate(z.clone()), true);
     }
+
+    #[test]
+    fn test_p130_script() {
+        let pubkey_script = new_script(vec![
+            OperationCode(OperationCodes::Op5 as u8),
+            OperationCode(OperationCodes::OpAdd as u8),
+            OperationCode(OperationCodes::Op9 as u8),
+            OperationCode(OperationCodes::OpEqual as u8),
+        ]);
+
+        let sig_script = new_script(vec![OperationCode(OperationCodes::Op4 as u8)]);
+
+        let combined_script = sig_script + pubkey_script;
+        assert_eq!(
+            combined_script.evaluate(new_secp256k1scalarelement_from_i32(0)),
+            true
+        );
+    }
 }

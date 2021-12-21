@@ -1078,7 +1078,7 @@ impl Operations {
         return true;
     }
 
-    #[allow(dead_ccode)]
+    #[allow(dead_code)]
     pub fn op_sha1(stack: &mut Stack<Element>) -> bool {
         if stack.is_empty() {
             return false;
