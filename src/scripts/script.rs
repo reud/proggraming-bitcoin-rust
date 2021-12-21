@@ -228,6 +228,8 @@ mod tests {
     };
     use crate::helper::helper;
     use crate::helper::helper::hash160;
+    use crate::scripts::operation::OperationCodes;
+    use crate::scripts::operation::OperationCodes::OpReturn;
     use crate::scripts::script::Cmd::OperationCode;
     use crypto_hash::{digest, hex_digest, Algorithm};
     use std::num::ParseIntError;
@@ -245,7 +247,10 @@ mod tests {
 
         let sig = helper::decode_hex("3045022000eff69ef2b1bd93a66ed5219add4fb51e11a840f404876325a1e8ffe0529a2c022100c7207fee197d27c618aea621406f6bf5ef6fca38681d82b2f06fddbdce6feab601").unwrap();
 
-        let pubkey_cmds: Vec<Cmd> = vec![Cmd::Element(sec_pubkey), Cmd::OperationCode(172)];
+        let pubkey_cmds: Vec<Cmd> = vec![
+            Cmd::Element(sec_pubkey),
+            Cmd::OperationCode(OperationCodes::OpChecksig as u8),
+        ];
         let sig_cmds: Vec<Cmd> = vec![Cmd::Element(sig)];
 
         let pubkey_script = new_script(pubkey_cmds);
@@ -273,11 +278,11 @@ mod tests {
         let mut sig = sig.der();
         sig.push(1); // <signature>はDER署名+sighash(01) で表す
         let script_pub_key_cmds: Vec<Cmd> = vec![
-            OperationCode(118),                         // OP_DUP
-            OperationCode(169),                         // OP_HASH160
+            OperationCode(OperationCodes::OpDup as u8),
+            OperationCode(OperationCodes::OpHash160 as u8),
             Cmd::Element(compressed_public_sec_hashed), // <hash>
-            OperationCode(136),                         // OP_EQUALVERIFY
-            OperationCode(172),                         // OP_CHECKSIG
+            OperationCode(OperationCodes::OpEqualverify as u8),
+            OperationCode(OperationCodes::OpChecksig as u8),
         ];
 
         let script_sig_cmds: Vec<Cmd> = vec![
