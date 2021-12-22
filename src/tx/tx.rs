@@ -4,11 +4,16 @@ use crate::helper::helper::{
 use crate::tx::tx_in::TxIn;
 use crate::tx::tx_out::TxOut;
 
+use crate::scripts::script::new_script;
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
+
+pub enum Sighash {
+    All = 1,
+}
 
 #[derive(Debug, Clone)]
 pub struct Tx {
@@ -20,6 +25,29 @@ pub struct Tx {
 }
 
 impl Tx {
+    // ref. p139
+    // トランザクションの署名ハッシュzを取得する。(署名の検証に利用する)
+    // ScriptSigの一部に署名がくっついているので、くっつく前の状態まで復元する
+    pub fn sig_hash(self, input_idx: u8) -> BigUint {
+        let tx = self.clone();
+        let mut copy_tx_ins = self.tx_ins.clone();
+        // inputのもつscript_sigを取得する
+        let prev_tx = copy_tx_ins[input_idx as usize]
+            .clone()
+            .fetch_tx(self.testnet);
+        // そのtxに対応するoutputを取得して、今見ているinputに対応するものを取得
+        let script_pub_key = prev_tx.tx_outs
+            [copy_tx_ins[input_idx].clone().prev_transaction_index as usize]
+            .clone()
+            .script_pub_key;
+
+        tx.tx_ins[input_idx].script_sig = script_pub_key;
+        let mut bytes = tx.serialize();
+        bytes.append(&mut (Sighash::All as u8).to_le_bytes().to_vec());
+        let h256 = hash256(bytes);
+        return BigUint::from_bytes_be(&*h256);
+    }
+
     #[allow(dead_code)]
     pub fn fee(self, testnet: bool) -> BigUint {
         let mut input_sum = BigUint::from(0u8);
