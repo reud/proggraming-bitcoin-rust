@@ -5,7 +5,7 @@ use crate::tx::tx_in::TxIn;
 use crate::tx::tx_out::TxOut;
 
 use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement;
-use crate::scripts::script::new_script;
+
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use std::fmt;
@@ -54,7 +54,7 @@ impl Tx {
     // ScriptSigの一部に署名がくっついているので、くっつく前の状態まで復元する
     pub fn sig_hash(&self, input_idx: usize) -> BigUint {
         let mut tx = self.clone();
-        let mut copy_tx_ins = self.tx_ins.clone();
+        let copy_tx_ins = self.tx_ins.clone();
         // inputのもつscript_sigを取得する
         let prev_tx = copy_tx_ins[input_idx].clone().fetch_tx(self.testnet);
         // そのtxに対応するoutputを取得して、今見ているinputに対応するものを取得

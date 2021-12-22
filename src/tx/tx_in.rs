@@ -1,4 +1,4 @@
-use crate::helper::helper::{biguint_to_32_bytes_le, read_varint, u8vec_to_str};
+use crate::helper::helper::{biguint_to_32_bytes_le};
 use crate::scripts::script::Script;
 use crate::tx::tx::Tx;
 use crate::tx::tx_fetcher::TxFetcher;
@@ -25,7 +25,7 @@ impl TxIn {
         return tx.tx_outs[index].amount;
     }
 
-    pub fn serialize(mut self) -> Vec<u8> {
+    pub fn serialize(self) -> Vec<u8> {
         let mut v = vec![];
         let prev_transaction_id = biguint_to_32_bytes_le(self.prev_transaction_id);
         for x in prev_transaction_id.iter() {
@@ -57,7 +57,7 @@ impl TxIn {
 
         let prev_transaction_index = u32::from_le_bytes(prev_transaction_index);
 
-        let mut script_sig = Script::parse(c);
+        let script_sig = Script::parse(c);
 
         let mut sequence = [0u8; 4];
         if c.read(&mut sequence).is_err() {

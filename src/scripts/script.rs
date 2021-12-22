@@ -1,7 +1,7 @@
 use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 use crate::helper::helper::{encode_varint, read_varint, u8vec_to_str};
 use crate::scripts::element::{new_element, new_element_from_bytes, Element};
-use crate::scripts::operation::{Operation, OperationCodes, Operations};
+use crate::scripts::operation::{Operation, Operations};
 use crate::scripts::stack::new_stack;
 use crate::scripts::stack::Stack;
 use std::fmt;

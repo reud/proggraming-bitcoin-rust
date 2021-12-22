@@ -1,4 +1,4 @@
-use crate::helper::helper::{read_varint, u8vec_to_str};
+
 use crate::scripts::script::Script;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -11,7 +11,7 @@ pub struct TxOut {
 }
 
 impl TxOut {
-    pub fn serialize(mut self) -> Vec<u8> {
+    pub fn serialize(self) -> Vec<u8> {
         let mut v = vec![];
         for x in self.amount.to_le_bytes().iter() {
             v.push(*x);
