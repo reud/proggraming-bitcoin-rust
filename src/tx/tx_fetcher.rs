@@ -5,7 +5,7 @@ use std::fmt::Write;
 use std::io::{Cursor, Read};
 use std::num::ParseIntError;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct TxFetcher {}
 
 #[allow(dead_code)]

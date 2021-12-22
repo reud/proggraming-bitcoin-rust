@@ -15,11 +15,11 @@ pub struct TxIn {
 }
 
 impl TxIn {
-    pub fn fetch_tx(self, testnet: bool) -> Tx {
-        return TxFetcher::fetch(self.prev_transaction_id, testnet);
+    pub fn fetch_tx(&self, testnet: bool) -> Tx {
+        return TxFetcher::fetch(self.clone().prev_transaction_id, testnet);
     }
 
-    pub fn value(self, testnet: bool) -> u64 {
+    pub fn value(&self, testnet: bool) -> u64 {
         let index: usize = self.prev_transaction_index as usize;
         let tx = self.fetch_tx(testnet);
         return tx.tx_outs[index].amount;

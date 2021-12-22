@@ -4,6 +4,7 @@ use crate::helper::helper::{
 use crate::tx::tx_in::TxIn;
 use crate::tx::tx_out::TxOut;
 
+use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement;
 use crate::scripts::script::new_script;
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
@@ -25,16 +26,37 @@ pub struct Tx {
 }
 
 impl Tx {
+    pub fn verify(&self) -> bool {
+        if self.clone().fee() < BigUint::from(0u64) {
+            return false;
+        }
+        for i in 0..self.clone().tx_ins.len() {
+            if !self.verify_input(i) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    pub fn verify_input(&self, input_idx: usize) -> bool {
+        let tx_in = self.tx_ins[input_idx].clone();
+        let tx = tx_in.fetch_tx(self.testnet);
+        let script_pub_key = tx.clone().tx_outs[tx_in.prev_transaction_index as usize]
+            .script_pub_key
+            .clone();
+        let combined = tx_in.clone().script_sig.clone() + script_pub_key;
+        let z = tx.sig_hash(input_idx);
+        let z = new_secp256k1scalarelement(z);
+        combined.evaluate(z)
+    }
     // ref. p139
     // トランザクションの署名ハッシュzを取得する。(署名の検証に利用する)
     // ScriptSigの一部に署名がくっついているので、くっつく前の状態まで復元する
-    pub fn sig_hash(self, input_idx: u8) -> BigUint {
-        let tx = self.clone();
+    pub fn sig_hash(&self, input_idx: usize) -> BigUint {
+        let mut tx = self.clone();
         let mut copy_tx_ins = self.tx_ins.clone();
         // inputのもつscript_sigを取得する
-        let prev_tx = copy_tx_ins[input_idx as usize]
-            .clone()
-            .fetch_tx(self.testnet);
+        let prev_tx = copy_tx_ins[input_idx].clone().fetch_tx(self.testnet);
         // そのtxに対応するoutputを取得して、今見ているinputに対応するものを取得
         let script_pub_key = prev_tx.tx_outs
             [copy_tx_ins[input_idx].clone().prev_transaction_index as usize]
@@ -48,26 +70,25 @@ impl Tx {
         return BigUint::from_bytes_be(&*h256);
     }
 
-    #[allow(dead_code)]
-    pub fn fee(self, testnet: bool) -> BigUint {
+    pub fn fee(&self) -> BigUint {
         let mut input_sum = BigUint::from(0u8);
         let mut output_sum = BigUint::from(0u8);
-        for tx_in in self.tx_ins {
-            input_sum += BigUint::from_u64(tx_in.value(testnet)).unwrap();
+        for tx_in in &self.tx_ins {
+            input_sum += BigUint::from_u64(tx_in.value(self.testnet)).unwrap();
         }
-        for tx_out in self.tx_outs {
+        for tx_out in &self.tx_outs {
             output_sum += tx_out.amount;
         }
         return input_sum - output_sum;
     }
 
-    fn hash(self) -> Vec<u8> {
+    fn hash(&self) -> Vec<u8> {
         let mut h = hash256(self.serialize());
         h.reverse();
         return h;
     }
 
-    pub fn id(self) -> String {
+    pub fn id(&self) -> String {
         // 人が読める16進数表記のトランザクションハッシュ
         return u8vec_to_str(self.hash());
     }
@@ -87,7 +108,7 @@ impl Tx {
         };
     }
 
-    pub fn serialize(self) -> Vec<u8> {
+    pub fn serialize(&self) -> Vec<u8> {
         // version
         let mut v = vec![];
         for x in self.version.to_le_bytes().iter() {
@@ -96,13 +117,13 @@ impl Tx {
         // ins_len
         let mut x = encode_varint(self.tx_ins.len() as u128);
         v.append(&mut x);
-        for tx_in in self.tx_ins {
-            v.append(&mut tx_in.serialize());
+        for tx_in in &self.tx_ins {
+            v.append(&mut tx_in.clone().serialize());
         }
         // out_len
         v.append(&mut encode_varint(self.tx_outs.len() as u128));
-        for tx_out in self.tx_outs {
-            v.append(&mut tx_out.serialize());
+        for tx_out in &self.tx_outs {
+            v.append(&mut tx_out.clone().serialize());
         }
         for x in self.lock_time.to_le_bytes().iter() {
             v.push(*x);
@@ -227,6 +248,6 @@ mod tests {
         let mut x = Cursor::new(s);
         let tx = Tx::parse(false, &mut x);
         println!("tx1info: \n{}\n ", tx.clone());
-        println!("fee: {}", tx.fee(false))
+        println!("fee: {}", tx.fee())
     }
 }
