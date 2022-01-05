@@ -6,6 +6,9 @@ use crate::tx::tx_out::TxOut;
 
 use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement;
 
+use crate::ecc::secp256k1_privatekey::Secp256k1PrivateKey;
+use crate::ecc::secp256k1_signature::Secp256k1Signature;
+use crate::scripts::script::{new_script, Cmd};
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use std::fmt;
@@ -49,6 +52,18 @@ impl Tx {
         let z = new_secp256k1scalarelement(z);
         combined.evaluate(z)
     }
+
+    pub fn sign_input(&mut self, input_idx: usize, private_key: Secp256k1PrivateKey) -> bool {
+        let z = self.sig_hash(input_idx);
+        let z = new_secp256k1scalarelement(z);
+        let mut der = private_key.sign(z).der();
+        der.append(&mut (Sighash::All as u8).to_le_bytes().to_vec());
+        let sig = der;
+        let sec = private_key.point.compressed_sec();
+        self.tx_ins[input_idx].script_sig = new_script(vec![Cmd::Element(sig), Cmd::Element(sec)]);
+        return self.verify_input(input_idx);
+    }
+
     // ref. p139
     // トランザクションの署名ハッシュzを取得する。(署名の検証に利用する)
     // ScriptSigの一部に署名がくっついているので、くっつく前の状態まで復元する
