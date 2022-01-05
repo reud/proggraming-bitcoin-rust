@@ -1,13 +1,14 @@
 use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 use crate::helper::helper::{encode_varint, read_varint, u8vec_to_str};
 use crate::scripts::element::{new_element, new_element_from_bytes, Element};
-use crate::scripts::operation::{Operation, Operations};
+use crate::scripts::operation::{Operation, OperationCodes, Operations};
 use crate::scripts::stack::new_stack;
 use crate::scripts::stack::Stack;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
 use crate::helper;
+use crate::scripts::script::Cmd::OperationCode;
 use std::io::{Cursor, Read};
 use std::ops::Add;
 
@@ -30,8 +31,25 @@ pub fn new_script(cmds: Vec<Cmd>) -> Script {
     Script { cmds }
 }
 
+pub fn new_script_p2pkh_locking(pubkey_hash_20bytes: Vec<u8>) -> Script {
+    Script {
+        cmds: vec![
+            OperationCode(OperationCodes::OpDup as u8),
+            OperationCode(OperationCodes::OpHash160 as u8),
+            Cmd::Element(pubkey_hash_20bytes),
+            OperationCode(OperationCodes::OpEqualverify as u8),
+            OperationCode(OperationCodes::OpChecksig as u8),
+        ],
+    }
+}
+
+pub fn new_script_p2pkh_unlocking(der_sig: Vec<u8>, compressed_public_sec: Vec<u8>) -> Script {
+    Script {
+        cmds: vec![Cmd::Element(der_sig), Cmd::Element(compressed_public_sec)],
+    }
+}
+
 impl Script {
-    #[allow(dead_code)]
     #[allow(dead_code)]
     pub fn parse(c: &mut Cursor<Vec<u8>>) -> Script {
         let length = read_varint(c);
