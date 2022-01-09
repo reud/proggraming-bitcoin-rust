@@ -247,8 +247,8 @@ impl Display for Script {
                 .iter()
                 .map(|cmd| match cmd {
                     Cmd::OperationCode(code) => {
-                        let method = Operations::code_functions(*code).unwrap();
-                        format!("{}, ", helper::helper::str_type_of(&method))
+                        let name = Operations::code_functions_name(*code);
+                        format!("{}, ", name)
                     }
                     Cmd::Element(el) => {
                         format!("Element<{}>, ", u8vec_to_str(el.clone()))
