@@ -56,7 +56,7 @@ impl Tx {
     pub fn sign_input(&mut self, input_idx: usize, private_key: Secp256k1PrivateKey) -> bool {
         let z = self.sig_hash(input_idx);
         let z = new_secp256k1scalarelement(z);
-        let mut der = private_key.sign(z).der();
+        let mut der = private_key.clone().sign(z).der();
         der.append(&mut (Sighash::All as u8).to_le_bytes().to_vec());
         let sig = der;
         let sec = private_key.point.compressed_sec();

@@ -1,4 +1,3 @@
-
 use crate::tx::tx::Tx;
 use num_bigint::BigUint;
 use std::fmt::Write;
@@ -38,6 +37,9 @@ impl TxFetcher {
     #[allow(dead_code)]
     pub fn fetch(tx_id: BigUint, testnet: bool) -> Tx {
         let tx_id_str = tx_id.clone().to_str_radix(16);
+        // もしかしたら64桁詰めいるかもしれないし、いらないかもしれない・・・
+        // アクセス先URLでは先頭が0で詰められていたので、0埋め、64桁、右詰めをしている。
+        let tx_id_str = format!("{:0>64}", tx_id_str);
         println!("hex: {}", tx_id_str);
         let url = format!("{}/tx/{}/hex", TxFetcher::get_url(testnet), tx_id_str);
         println!("url: {}", url.clone());
