@@ -1,4 +1,4 @@
-use crate::helper::helper::{biguint_to_32_bytes_le};
+use crate::helper::helper::biguint_to_32_bytes_le;
 use crate::scripts::script::Script;
 use crate::tx::tx::Tx;
 use crate::tx::tx_fetcher::TxFetcher;
@@ -15,6 +15,24 @@ pub struct TxIn {
 }
 
 impl TxIn {
+    pub fn new(prev_tx_id: BigUint, prev_tx_idx: u32) -> TxIn {
+        TxIn {
+            prev_transaction_id: prev_tx_id,
+            prev_transaction_index: prev_tx_idx,
+            script_sig: Script { cmds: vec![] },
+            sequence: 0xffffffff,
+        }
+    }
+
+    pub fn new_with_script_sig(prev_tx_id: BigUint, prev_tx_idx: u32, script_sig: Script) -> TxIn {
+        TxIn {
+            prev_transaction_id: prev_tx_id,
+            prev_transaction_index: prev_tx_idx,
+            script_sig,
+            sequence: 0xffffffff,
+        }
+    }
+
     pub fn fetch_tx(&self, testnet: bool) -> Tx {
         return TxFetcher::fetch(self.clone().prev_transaction_id, testnet);
     }

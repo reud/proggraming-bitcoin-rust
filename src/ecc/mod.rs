@@ -1,4 +1,4 @@
-mod decode;
+pub mod decode;
 pub mod encode;
 pub mod field_element;
 pub mod field_graph;

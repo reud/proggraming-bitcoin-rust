@@ -20,7 +20,7 @@ pub enum Cmd {
 
 #[derive(Debug, Clone)]
 pub struct Script {
-    cmds: Vec<Cmd>,
+    pub(crate) cmds: Vec<Cmd>,
 }
 
 pub fn new_empty_script() -> Script {

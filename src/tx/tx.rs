@@ -29,6 +29,22 @@ pub struct Tx {
 }
 
 impl Tx {
+    pub fn new(
+        version: u32,
+        tx_ins: Vec<TxIn>,
+        tx_outs: Vec<TxOut>,
+        lock_time: u32,
+        testnet: bool,
+    ) -> Tx {
+        Tx {
+            version,
+            tx_ins,
+            tx_outs,
+            lock_time,
+            testnet,
+        }
+    }
+
     pub fn verify(&self) -> bool {
         if self.clone().fee() < BigUint::from(0u64) {
             return false;
