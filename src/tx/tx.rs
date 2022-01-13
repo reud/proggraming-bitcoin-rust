@@ -21,11 +21,11 @@ pub enum Sighash {
 
 #[derive(Debug, Clone)]
 pub struct Tx {
-    version: u32,
+    pub(crate) version: u32,
     pub(crate) tx_ins: Vec<TxIn>,
     pub(crate) tx_outs: Vec<TxOut>,
     pub(crate) lock_time: u32,
-    testnet: bool,
+    pub(crate) testnet: bool,
 }
 
 impl Tx {
@@ -162,6 +162,10 @@ impl Tx {
         return v;
     }
 
+    pub fn serialize_str(&self) -> String {
+        u8vec_to_str(self.serialize())
+    }
+
     pub fn parse(testnet: bool, c: &mut Cursor<Vec<u8>>) -> Tx {
         let mut version = [0u8; 4];
         let result = c.read(&mut version);
@@ -213,10 +217,11 @@ impl Display for Tx {
                 .tx_ins
                 .into_iter()
                 .map(|x| format!(
-                    "  id,idx: {}:{}\n  sig: {}",
+                    "  id,idx: {}:{}\n  sig: {}\n  serialize: {}",
                     x.prev_transaction_id.to_str_radix(16),
                     x.prev_transaction_index,
                     x.script_sig,
+                    u8vec_to_str(x.script_sig.serialize()),
                 ))
                 .collect::<Vec<_>>()
                 .join("\n"),

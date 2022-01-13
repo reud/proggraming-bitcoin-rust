@@ -54,7 +54,6 @@ impl TxFetcher {
         }
 
         // body.pop(); // remove newline(\n)
-        println!("{}", body.is_empty());
         let hex = decode_hex(&*body).unwrap();
 
         let mut tx;
@@ -73,7 +72,6 @@ impl TxFetcher {
             let mut cursor = Cursor::new(hex.clone());
             tx = Tx::parse(testnet, &mut cursor);
         }
-        println!("tx2info: \n{}", tx);
         let id = tx.clone().id();
         if id != tx_id_str {
             panic!("not the same id: {} vs {}", id, tx_id_str);
