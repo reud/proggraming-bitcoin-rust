@@ -2,16 +2,18 @@ use crate::helper::helper::biguint_to_32_bytes_le;
 use crate::scripts::script::Script;
 use crate::tx::tx::Tx;
 use crate::tx::tx_fetcher::TxFetcher;
+use crate::{u8vec_to_str, TxOut};
 use num_bigint::BigUint;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
+
 #[derive(Debug, Clone)]
 pub struct TxIn {
     pub(crate) prev_transaction_id: BigUint,
     pub(crate) prev_transaction_index: u32,
     pub(crate) script_sig: Script,
-    sequence: u32,
+    pub(crate) sequence: u32,
 }
 
 impl TxIn {
@@ -49,6 +51,7 @@ impl TxIn {
         for x in prev_transaction_id.iter() {
             v.push(*x);
         }
+
         for x in self.prev_transaction_index.to_le_bytes().iter() {
             v.push(*x);
         }
@@ -61,6 +64,14 @@ impl TxIn {
         }
         return v;
     }
+    pub fn script_pubkey(&self, testnet: bool) -> Script {
+        let tx = self.fetch_tx(testnet);
+        let tx_outs = tx.clone().tx_outs;
+        return tx_outs[self.clone().prev_transaction_index as usize]
+            .clone()
+            .script_pub_key;
+    }
+
     pub fn parse(c: &mut Cursor<Vec<u8>>) -> TxIn {
         let mut prev_transaction_id = [0u8; 32];
         if c.read(&mut prev_transaction_id).is_err() {

@@ -9,6 +9,7 @@ use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement;
 use crate::ecc::secp256k1_privatekey::Secp256k1PrivateKey;
 use crate::ecc::secp256k1_signature::Secp256k1Signature;
 use crate::scripts::script::{new_script, Cmd};
+use crate::Script;
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use std::fmt;
@@ -64,13 +65,13 @@ impl Tx {
             .script_pub_key
             .clone();
         let combined = tx_in.clone().script_sig.clone() + script_pub_key;
-        let z = tx.sig_hash(input_idx);
+        let z = tx.sig_hash(input_idx, self.testnet);
         let z = new_secp256k1scalarelement(z);
         combined.evaluate(z)
     }
 
     pub fn sign_input(&mut self, input_idx: usize, private_key: Secp256k1PrivateKey) -> bool {
-        let z = self.sig_hash(input_idx);
+        let z = self.sig_hash(input_idx, self.testnet);
         let z = new_secp256k1scalarelement(z);
         let mut der = private_key.clone().sign(z).der();
         der.append(&mut (Sighash::All as u8).to_le_bytes().to_vec());
@@ -83,21 +84,35 @@ impl Tx {
     // ref. p139
     // トランザクションの署名ハッシュzを取得する。(署名の検証に利用する)
     // ScriptSigの一部に署名がくっついているので、くっつく前の状態まで復元する
-    pub fn sig_hash(&self, input_idx: usize) -> BigUint {
-        let mut tx = self.clone();
-        let copy_tx_ins = self.tx_ins.clone();
-        // inputのもつscript_sigを取得する
-        let prev_tx = copy_tx_ins[input_idx].clone().fetch_tx(self.testnet);
-        // そのtxに対応するoutputを取得して、今見ているinputに対応するものを取得
-        let script_pub_key = prev_tx.tx_outs
-            [copy_tx_ins[input_idx].clone().prev_transaction_index as usize]
-            .clone()
-            .script_pub_key;
+    pub fn sig_hash(&self, input_idx: usize, testnet: bool) -> BigUint {
+        let mut result = self.version.to_le_bytes().to_vec();
+        result.append(&mut encode_varint(self.clone().tx_ins.len() as u128));
 
-        tx.tx_ins[input_idx].script_sig = script_pub_key;
-        let mut bytes = tx.serialize();
-        bytes.append(&mut (Sighash::All as u8).to_le_bytes().to_vec());
-        let h256 = hash256(bytes);
+        for (i, tx_in) in self.clone().tx_ins.clone().iter().enumerate() {
+            let script_sig = if i == input_idx {
+                tx_in.script_pubkey(testnet)
+            } else {
+                Script { cmds: vec![] }
+            };
+            result.append(
+                &mut TxIn {
+                    prev_transaction_id: tx_in.clone().prev_transaction_id,
+                    prev_transaction_index: tx_in.clone().prev_transaction_index,
+                    script_sig: script_sig,
+                    sequence: tx_in.sequence,
+                }
+                .serialize(),
+            );
+        }
+        result.append(&mut encode_varint((self.clone().tx_outs.len() as u128)));
+        for (i, tx_out) in self.clone().tx_outs.clone().iter().enumerate() {
+            result.append(&mut tx_out.clone().serialize());
+        }
+        result.append(&mut self.lock_time.to_le_bytes().to_vec());
+        result.append(&mut (Sighash::All as u32).to_le_bytes().to_vec());
+        println!("hash mae: {}", u8vec_to_str(result.clone()));
+        let h256 = hash256(result);
+
         return BigUint::from_bytes_be(&*h256);
     }
 
@@ -141,25 +156,20 @@ impl Tx {
 
     pub fn serialize(&self) -> Vec<u8> {
         // version
-        let mut v = vec![];
-        for x in self.version.to_le_bytes().iter() {
-            v.push(*x);
+        let mut result = self.version.to_le_bytes().to_vec();
+        result.append(&mut encode_varint(self.clone().tx_ins.len() as u128));
+
+        for tx_in in self.clone().tx_ins.clone().iter() {
+            result.append(&mut tx_in.clone().serialize());
         }
-        // ins_len
-        let mut x = encode_varint(self.tx_ins.len() as u128);
-        v.append(&mut x);
-        for tx_in in &self.tx_ins {
-            v.append(&mut tx_in.clone().serialize());
+
+        result.append(&mut encode_varint((self.clone().tx_outs.len() as u128)));
+        for tx_out in self.clone().tx_outs.clone().iter() {
+            result.append(&mut tx_out.clone().serialize());
         }
-        // out_len
-        v.append(&mut encode_varint(self.tx_outs.len() as u128));
-        for tx_out in &self.tx_outs {
-            v.append(&mut tx_out.clone().serialize());
-        }
-        for x in self.lock_time.to_le_bytes().iter() {
-            v.push(*x);
-        }
-        return v;
+
+        result.append(&mut self.lock_time.to_le_bytes().to_vec());
+        return result;
     }
 
     pub fn serialize_str(&self) -> String {

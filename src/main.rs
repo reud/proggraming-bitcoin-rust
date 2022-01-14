@@ -9,7 +9,7 @@ use crate::helper::helper::{decode_hex, hash160, hash256, u8vec_to_str};
 use crate::scripts::script::{
     new_script, new_script_p2pkh_locking, new_script_p2pkh_unlocking, Cmd, Script,
 };
-use crate::tx::tx::Tx;
+use crate::tx::tx::{Sighash, Tx};
 use crate::tx::tx_fetcher::TxFetcher;
 use crate::tx::tx_in::TxIn;
 use crate::tx::tx_out::TxOut;
@@ -41,19 +41,11 @@ fn broadcast_testnet_transaction_test() {
     let my_address = private_key.clone().point.compressed_address(true);
     let target = "mwJn1YPMq7y5F8J3LkC5Hxg9PHyZ5K4cFv";
 
-    let faucet_tx_id = "7eac43503b64db16d791b00d5fbf2067d53b3607418f911bac7ffefe4fea7184";
+    let faucet_tx_id = "ae89b93ddf943d5b692181980877c29d248519210a92f4a12c607743e9c6ee31";
     let faucet_tx_id = BigUint::from_str_radix(faucet_tx_id, 16).unwrap();
-    let tx = TxFetcher::fetch(faucet_tx_id.clone(), true);
-    let outs = tx.clone().tx_outs;
-    let amount = outs[0].amount;
-    println!("your output amount: {}", amount);
 
-    let send_amount = amount / 10 * 6;
-    let change_amount = (amount - send_amount) * 8 / 10;
-    // 残りはrelay fee
-
-    println!("send amount: {}", send_amount);
-    println!("change_amount: {}", change_amount);
+    let send_amount = 4000;
+    let change_amount = 4000;
 
     let version = 1;
     let lock_time = 0;
@@ -78,27 +70,25 @@ fn broadcast_testnet_transaction_test() {
     let mut create_tx = Tx::new(
         version,
         vec![txin.clone()].clone(),
-        vec![target_out.clone(), change_out.clone()].clone(),
+        vec![change_out.clone(), target_out.clone()].clone(),
         lock_time,
         true,
     );
 
-    let z = create_tx.sig_hash(0); // 署名するinputについて呼び出す。今回はinputは一個なのでidx: 0
-    println!("z: {}", z);
+    let z = create_tx.sig_hash(0, true); // 署名するinputについて呼び出す。今回はinputは一個なのでidx: 0
     let z = new_secp256k1scalarelement(z);
-    println!("z: {}", z);
     let sig = private_key.clone().sign(z.clone());
     let mut sig = sig.der();
-    sig.push(1); // <signature>はDER署名+sighash(01) で表す
-    let sec = private_key.point.compressed_sec();
+    // <signature>はDER署名+sighash(01) で表す
+    sig.append(&mut (Sighash::All as u8).to_be_bytes().to_vec());
+    let sec = private_key.clone().point.compressed_sec();
     let script_sig = new_script(vec![Cmd::Element(sig), Cmd::Element(sec)]);
 
-    create_tx.tx_ins[0].script_sig = script_sig;
-
-    println!("generate: \n{}", create_tx);
-    println!("verify result: {}", create_tx.verify());
-    println!("tx: \n{}", create_tx.serialize_str());
-    // 間違っているので直す。 zってどこから取ってくるんだっけ？
+    create_tx.tx_ins[0].script_sig = script_sig.clone();
+    println!("create_tx: \n {}", create_tx);
+    println!("create_tx_serialized: \n{}", create_tx.serialize_str());
+    // private_key
+    println!("private_key point: \n {}", private_key.clone().point);
 }
 
 fn main() {

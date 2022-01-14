@@ -2,11 +2,14 @@ use crate::ecc::secp256k1_scalar_element::{
     new_secp256k1scalarelement, new_secp256k1scalarelement_from_hex_str, Secp256k1ScalarElement,
 };
 
-use num_bigint::{BigUint};
+use crate::helper::helper::{biguint_to_32_bytes_be, lstip_bytes};
+use crate::u8vec_to_str;
+use num_bigint::BigUint;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
 
+#[derive(Clone)]
 pub struct Secp256k1Signature {
     pub(crate) r: Secp256k1ScalarElement,
     pub(crate) s: Secp256k1ScalarElement,
@@ -83,42 +86,28 @@ impl Secp256k1Signature {
     #[allow(dead_code)]
     pub fn der(self) -> Vec<u8> {
         let prefix_marker = 0x30u8;
-        let r_bytes = self.r.num.to_bytes_be();
-        let s_bytes = self.s.num.to_bytes_be();
-        let mut r_sel: Vec<u8> = vec![];
-        let mut s_sel: Vec<u8> = vec![];
-        if r_bytes[0] >= 0x80u8 {
-            r_sel.push(0u8);
+        let mut rbin = biguint_to_32_bytes_be(self.r.num).to_vec();
+        rbin = lstip_bytes(rbin, 0);
+        if (rbin[0] & 0x80u8) > 0 {
+            rbin.insert(0, 0);
         }
-        if s_bytes[0] >= 0x80u8 {
-            s_sel.push(0u8);
+        let mut result: Vec<u8> = vec![2, rbin.clone().len() as u8];
+        result.append(&mut rbin);
+
+        let mut sbin = biguint_to_32_bytes_be(self.s.num).to_vec();
+        sbin = lstip_bytes(sbin, 0);
+        if (sbin[0] & 0x80u8) > 0 {
+            sbin.insert(0, 0);
         }
+        let mut result2: Vec<u8> = vec![2, sbin.len() as u8];
+        result2.append(&mut sbin);
 
-        for rnum in r_bytes {
-            r_sel.push(rnum);
-        }
-        r_sel.insert(0, r_sel.len() as u8); // size
-        r_sel.insert(0, 2u8); // marker
-        for snum in s_bytes {
-            s_sel.push(snum);
-        }
-        s_sel.insert(0, s_sel.len() as u8);
-        s_sel.insert(0, 2u8); //marker
+        result.append(&mut result2);
 
-        let size = (r_sel.len() + s_sel.len()) as u8;
+        let mut rresult: Vec<u8> = vec![prefix_marker, result.len() as u8];
+        rresult.append(&mut result);
 
-        let mut ret = vec![prefix_marker];
-        ret.push(size);
-
-        for v in r_sel {
-            ret.push(v);
-        }
-
-        for v in s_sel {
-            ret.push(v);
-        }
-
-        return ret;
+        return rresult;
     }
 }
 

@@ -1,4 +1,3 @@
-
 use crate::scripts::script::Script;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -13,12 +12,8 @@ pub struct TxOut {
 impl TxOut {
     pub fn serialize(self) -> Vec<u8> {
         let mut v = vec![];
-        for x in self.amount.to_le_bytes().iter() {
-            v.push(*x);
-        }
-        for x in self.script_pub_key.serialize().iter() {
-            v.push(*x);
-        }
+        v.append(&mut self.amount.to_le_bytes().to_vec());
+        v.append(&mut self.script_pub_key.serialize().to_vec());
         return v;
     }
 

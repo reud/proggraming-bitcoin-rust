@@ -132,18 +132,9 @@ pub fn encode_varint(i: u128) -> Vec<u8> {
 
 #[allow(dead_code)]
 pub fn biguint_to_32_bytes_be(num: BigUint) -> [u8; 32] {
-    let mut ret = [0u8; 32];
-    let bin = num.to_bytes_be();
-    if bin.len() > 32 {
-        return ret;
-    }
-    let buf = bin.len(); // 20
-    let x = 32 - buf; // 12
-    let i = 0;
-    while i < x {
-        ret[i + buf] = bin[i];
-    }
-    return ret;
+    let mut r = biguint_to_32_bytes_le(num);
+    r.reverse();
+    return r;
 }
 
 #[allow(dead_code)]
@@ -164,4 +155,13 @@ pub fn biguint_to_32_bytes_le(num: BigUint) -> [u8; 32] {
 // ref: https://stackoverflow.com/questions/21747136/how-do-i-print-the-type-of-a-variable-in-rust
 pub fn str_type_of<T>(_: &T) -> String {
     format!("{}", std::any::type_name::<T>())
+}
+
+pub fn lstip_bytes(bytes: Vec<u8>, byte: u8) -> Vec<u8> {
+    for (i, v) in bytes.iter().enumerate() {
+        if *v != byte {
+            return bytes[i..].to_vec();
+        }
+    }
+    return vec![];
 }

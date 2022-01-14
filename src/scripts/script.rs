@@ -122,9 +122,7 @@ impl Script {
         let result = self.raw_serialize();
         let total = result.len();
         let mut ev = encode_varint(total as u128);
-        for el in result.iter() {
-            ev.push(*el);
-        }
+        ev.append(&mut result.to_vec());
         return ev;
     }
     #[allow(dead_code)]
@@ -133,39 +131,22 @@ impl Script {
         for cmd in self.cmds.iter() {
             match &*cmd {
                 Cmd::OperationCode(code) => {
-                    result.push(*code);
+                    result.append(&mut code.to_le_bytes().to_vec());
                 }
                 Cmd::Element(v) => {
                     let len = v.len();
                     if len < 75 {
-                        let l = len as u8;
-                        for b in l.to_le_bytes().iter() {
-                            result.push(*b);
-                        }
+                        result.append(&mut (len as u8).to_le_bytes().to_vec());
                     } else if len > 75 && len < 0x100 {
-                        let l = u8::to_le_bytes(76 as u8);
-                        for b in l.to_vec().iter() {
-                            result.push(*b);
-                        }
-                        let l = u8::to_le_bytes(len as u8);
-                        for b in l.to_vec().iter() {
-                            result.push(*b);
-                        }
+                        result.append(&mut (76 as u8).to_le_bytes().to_vec());
+                        result.append(&mut (len as u8).to_le_bytes().to_vec());
                     } else if len > 0x100 && len <= 520 {
-                        let l = u8::to_le_bytes(77 as u8);
-                        for b in l.to_vec().iter() {
-                            result.push(*b);
-                        }
-                        let l = u16::to_le_bytes(len as u16);
-                        for b in l.to_vec().iter() {
-                            result.push(*b);
-                        }
+                        result.append(&mut (77 as u8).to_le_bytes().to_vec());
+                        result.append(&mut (len as u16).to_le_bytes().to_vec());
                     } else {
                         panic!("too long an cmd")
                     }
-                    for el in v.iter() {
-                        result.push(*el);
-                    }
+                    result.append(&mut v.clone());
                 }
             }
         }
