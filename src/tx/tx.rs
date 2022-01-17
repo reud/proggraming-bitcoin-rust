@@ -52,6 +52,7 @@ impl Tx {
         }
         for i in 0..self.clone().tx_ins.len() {
             if !self.verify_input(i) {
+                println!("tx_in: {} failed",i);
                 return false;
             }
         }
@@ -98,7 +99,7 @@ impl Tx {
                 &mut TxIn {
                     prev_transaction_id: tx_in.clone().prev_transaction_id,
                     prev_transaction_index: tx_in.clone().prev_transaction_index,
-                    script_sig: script_sig,
+                    script_sig: script_sig.clone(),
                     sequence: tx_in.sequence,
                 }
                 .serialize(),

@@ -91,6 +91,77 @@ fn broadcast_testnet_transaction_test() {
     println!("private_key point: \n {}", private_key.clone().point);
 }
 
+// P148 練習問題5
+// インプットが2つあるトランザクションの作成
+#[allow(dead_code)]
+fn broadcast_testnet_transaction_two_input_test() {
+    // input_tx1,input_idx1 = "ec9995c4605aa1f30d53d8baa904e09fb3aab26c43d28d8d2477644a5707eec9", 1
+    // input_tx2,input_idx2 = "2e0baaaf9285532a5bb4aa4ab0ec758d4a47a4146b625c390f44de5e98328f17", 0
+    let private_key = fetch_private_key();
+
+    let my_address = "mpw1fSjdDKX6Qs2FAi8Q6Qqm7TKS296sDK".to_string();
+    let my_address = address_decode_base58(my_address.to_string()).unwrap();
+
+    let target_address = "mwJn1YPMq7y5F8J3LkC5Hxg9PHyZ5K4cFv".to_string();
+    let target_address = address_decode_base58(target_address.to_string()).unwrap();
+
+    let change_script = new_script_p2pkh_locking(my_address);
+    let target_script = new_script_p2pkh_locking(target_address);
+
+    let send_amount = 50000;
+    let change_amount = 20000;
+
+    let change_out = TxOut{ amount: change_amount, script_pub_key: change_script };
+    let target_out = TxOut{ amount: send_amount, script_pub_key: target_script };
+
+    let input_tx1 = "ec9995c4605aa1f30d53d8baa904e09fb3aab26c43d28d8d2477644a5707eec9";
+    let input_tx1 = BigUint::from_str_radix(input_tx1,16).unwrap();
+    let input_tx1_idx = 1;
+
+    let txin1 = TxIn::new(input_tx1,input_tx1_idx);
+
+    let input_tx2 = "2e0baaaf9285532a5bb4aa4ab0ec758d4a47a4146b625c390f44de5e98328f17";
+    let input_tx2 = BigUint::from_str_radix(input_tx2,16).unwrap();
+    let input_tx2_idx = 0;
+
+    let txin2 = TxIn::new(input_tx2,input_tx2_idx);
+
+    let version = 1;
+    let lock_time = 0;
+    let mut create_tx = Tx::new(
+        version,
+        vec![txin1,txin2],
+        vec![change_out,target_out],
+        lock_time,
+        true,
+    );
+
+    let sec = private_key.clone().point.uncompressed_sec();
+
+    let z1 = create_tx.sig_hash(0,true);
+    let z1 = new_secp256k1scalarelement(z1);
+    let sig1 = private_key.clone().sign(z1);
+    let mut sig1 = sig1.der();
+
+    sig1.append(&mut (Sighash::All as u8).to_be_bytes().to_vec());
+    let script_sig1 = new_script(vec![Cmd::Element(sig1),Cmd::Element(sec.clone())]);
+    create_tx.tx_ins[0].script_sig = script_sig1.clone();
+
+    let z2 = create_tx.sig_hash(1,true);
+    let z2 = new_secp256k1scalarelement(z2);
+    let sig2 = private_key.clone().sign(z2);
+    let mut sig2 = sig2.der();
+
+    sig2.append(&mut (Sighash::All as u8).to_be_bytes().to_vec());
+    let script_sig2 = new_script(vec![Cmd::Element(sig2),Cmd::Element(sec.clone())]);
+    create_tx.tx_ins[1].script_sig = script_sig2.clone();
+
+    println!("create_tx: \n {}",create_tx.serialize_str());
+    println!("verify: \n {}",create_tx.verify());
+
+}
+
+
 fn main() {
-    broadcast_testnet_transaction_test();
+    broadcast_testnet_transaction_two_input_test();
 }
