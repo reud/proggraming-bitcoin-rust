@@ -1,4 +1,4 @@
-# Proggraming Bitcoin Rust Implementation
+# Proggraming Bitcoin Rust Implementation(WIP)
 
 This is a reimplementation in Rust of the Python source code in Programming Bitcoin written by jimmy song, published by O'Reilly.
 
