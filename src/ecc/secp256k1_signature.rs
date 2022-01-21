@@ -86,7 +86,8 @@ impl Secp256k1Signature {
     #[allow(dead_code)]
     pub fn der(self) -> Vec<u8> {
         let prefix_marker = 0x30u8;
-        let mut rbin = biguint_to_32_bytes_be(self.r.num).to_vec();
+        let mut rbin = biguint_to_32_bytes_be(self.clone().r.num).to_vec();
+        println!("r: {}",self.r.clone().num.clone());
         rbin = lstip_bytes(rbin, 0);
         if (rbin[0] & 0x80u8) > 0 {
             rbin.insert(0, 0);

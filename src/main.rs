@@ -138,21 +138,27 @@ fn broadcast_testnet_transaction_two_input_test() {
 
     let sec = private_key.clone().point.uncompressed_sec();
 
+    // zの値はどっちもあってそう。kの値を固定してみてトランザクションのチェックを行う
     let z1 = create_tx.sig_hash(0,true);
     let z1 = new_secp256k1scalarelement(z1);
+    println!("z_val 0: {}",z1.clone());
     let sig1 = private_key.clone().sign(z1);
     let mut sig1 = sig1.der();
 
     sig1.append(&mut (Sighash::All as u8).to_be_bytes().to_vec());
+    println!("script_sig 0: {}",u8vec_to_str(sig1.clone()));
     let script_sig1 = new_script(vec![Cmd::Element(sig1),Cmd::Element(sec.clone())]);
     create_tx.tx_ins[0].script_sig = script_sig1.clone();
 
     let z2 = create_tx.sig_hash(1,true);
     let z2 = new_secp256k1scalarelement(z2);
+    println!("z_val 1: {}",z2.clone());
     let sig2 = private_key.clone().sign(z2);
     let mut sig2 = sig2.der();
 
     sig2.append(&mut (Sighash::All as u8).to_be_bytes().to_vec());
+    println!("script_sig 1: {}",u8vec_to_str(sig2.clone()));
+
     let script_sig2 = new_script(vec![Cmd::Element(sig2),Cmd::Element(sec.clone())]);
     create_tx.tx_ins[1].script_sig = script_sig2.clone();
 
