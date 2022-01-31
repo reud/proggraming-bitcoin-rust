@@ -7,7 +7,7 @@ use crate::scripts::stack::Stack;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-use crate::helper;
+
 use crate::scripts::script::Cmd::OperationCode;
 use std::io::{Cursor, Read};
 use std::ops::Add;

@@ -3,11 +3,14 @@ use crate::ecc::secp256k1_scalar_element::{
 };
 
 use crate::helper::helper::{biguint_to_32_bytes_be, lstip_bytes};
-use crate::u8vec_to_str;
+
 use num_bigint::BigUint;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
+
+#[cfg(test)]
+use crate::u8vec_to_str;
 
 #[derive(Clone)]
 pub struct Secp256k1Signature {

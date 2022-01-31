@@ -2,7 +2,7 @@ use crate::scripts::script::Script;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
-use crate::Tx;
+
 
 #[derive(Debug, Clone)]
 pub struct TxOut {

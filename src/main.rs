@@ -3,20 +3,20 @@
 use crate::ecc::decode::address_decode_base58;
 use crate::ecc::secp256k1_privatekey::{new_secp_256k1privatekey, Secp256k1PrivateKey};
 use crate::ecc::secp256k1_scalar_element::{
-    new_secp256k1scalarelement, new_secp256k1scalarelement_from_hex_str,
+    new_secp256k1scalarelement,
 };
-use crate::helper::helper::{decode_hex, hash160, hash256, u8vec_to_str};
+use crate::helper::helper::{hash256, u8vec_to_str};
 use crate::scripts::script::{
-    new_script, new_script_p2pkh_locking, new_script_p2pkh_unlocking, Cmd, Script,
+    new_script, new_script_p2pkh_locking, Cmd, Script,
 };
 use crate::tx::tx::{Sighash, Tx};
-use crate::tx::tx_fetcher::TxFetcher;
+
 use crate::tx::tx_in::TxIn;
 use crate::tx::tx_out::TxOut;
-use crypto_hash::{hex_digest, Algorithm};
+
 use num_bigint::BigUint;
 use num_traits::Num;
-use std::ptr::hash;
+
 
 mod ecc;
 mod helper;
@@ -168,6 +168,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
+    use crate::helper::helper::decode_hex;
     use super::*;
     #[test]
     fn generate_testnet_transaction_two_input() {

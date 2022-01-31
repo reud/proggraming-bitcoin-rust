@@ -7,13 +7,13 @@ use crate::tx::tx_out::TxOut;
 use crate::ecc::secp256k1_scalar_element::new_secp256k1scalarelement;
 
 use crate::ecc::secp256k1_privatekey::Secp256k1PrivateKey;
-use crate::ecc::secp256k1_signature::Secp256k1Signature;
+
 use crate::scripts::script::{new_script, Cmd};
 use crate::Script;
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use std::fmt;
-use std::fmt::{Display, format, Formatter};
+use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
 
 pub enum Sighash {
@@ -102,8 +102,8 @@ impl Tx {
                 .serialize(),
             );
         }
-        result.append(&mut encode_varint((self.clone().tx_outs.len() as u128)));
-        for (i, tx_out) in self.clone().tx_outs.clone().iter().enumerate() {
+        result.append(&mut encode_varint(self.clone().tx_outs.len() as u128));
+        for (_i, tx_out) in self.clone().tx_outs.clone().iter().enumerate() {
             result.append(&mut tx_out.clone().serialize());
         }
         result.append(&mut self.lock_time.to_le_bytes().to_vec());
@@ -166,7 +166,7 @@ impl Tx {
             result.append(&mut tx_in.clone().serialize());
         }
 
-        result.append(&mut encode_varint((self.clone().tx_outs.len() as u128)));
+        result.append(&mut encode_varint(self.clone().tx_outs.len() as u128));
         for tx_out in self.clone().tx_outs.clone().iter() {
             result.append(&mut tx_out.clone().serialize());
         }
