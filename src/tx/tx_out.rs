@@ -2,6 +2,7 @@ use crate::scripts::script::Script;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
+use crate::Tx;
 
 #[derive(Debug, Clone)]
 pub struct TxOut {
@@ -30,6 +31,19 @@ impl TxOut {
             amount,
             script_pub_key,
         };
+    }
+
+    pub fn test_match_tx_out(&self, other: TxOut) -> Result<(),String> {
+        if !cfg!(test) {
+            return Err("TxOut.test_match_tx_out works only in test".to_string());
+        }
+
+        if self.amount != other.amount {
+            return Err(format!("TxOut.amount unmatch. self: {}, other: {}",self.amount,other.amount));
+        }
+
+        self.script_pub_key.test_match_script(other.script_pub_key)?;
+        return Ok(());
     }
 }
 

@@ -13,7 +13,7 @@ use crate::Script;
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
 use std::fmt;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, format, Formatter};
 use std::io::{Cursor, Read};
 
 pub enum Sighash {
@@ -61,12 +61,9 @@ impl Tx {
 
     pub fn verify_input(&self, input_idx: usize) -> bool {
         let tx_in = self.tx_ins[input_idx].clone();
-        let tx = tx_in.fetch_tx(self.testnet);
-        let script_pub_key = tx.clone().tx_outs[tx_in.prev_transaction_index as usize]
-            .script_pub_key
-            .clone();
+        let script_pub_key = tx_in.script_pubkey(self.testnet);
         let combined = tx_in.clone().script_sig.clone() + script_pub_key;
-        let z = tx.sig_hash(input_idx, self.testnet);
+        let z = self.sig_hash(input_idx, self.testnet);
         let z = new_secp256k1scalarelement(z);
         combined.evaluate(z)
     }
@@ -111,7 +108,10 @@ impl Tx {
         }
         result.append(&mut self.lock_time.to_le_bytes().to_vec());
         result.append(&mut (Sighash::All as u32).to_le_bytes().to_vec());
+
+        #[cfg(test)]
         println!("hash mae: {}", u8vec_to_str(result.clone()));
+
         let h256 = hash256(result);
 
         return BigUint::from_bytes_be(&*h256);
@@ -161,6 +161,7 @@ impl Tx {
         result.append(&mut encode_varint(self.clone().tx_ins.len() as u128));
 
         for tx_in in self.clone().tx_ins.clone().iter() {
+            #[cfg(test)]
             println!("serialize tx_in: {}",u8vec_to_str(tx_in.clone().serialize()));
             result.append(&mut tx_in.clone().serialize());
         }
@@ -215,6 +216,48 @@ impl Tx {
             lock_time,
             testnet,
         };
+    }
+
+    pub fn test_match_tx(&self,other: Tx) -> Result<(),String> {
+        if !cfg!(test) {
+            return Err("Tx.test_match_tx works only in test".to_string());
+        }
+
+        if self.version != other.version {
+            return Err(format!("Tx.version unmatch. self: {}, other: {}",self.version,other.version));
+        }
+
+        if self.tx_ins.len() != other.tx_ins.len() {
+            return Err(format!("Tx.tx_ins.len() unmatch. self: {}, other: {}",self.tx_ins.len(),other.tx_ins.len()));
+        }
+
+        for i in 0..(self.tx_ins.len()) {
+            match self.tx_ins[i].test_match_tx_in(other.tx_ins[i].clone()){
+                Err(e) => {
+                    return Err(format!("Tx.tx_ins[{}] unmatch. message: {}",i,e));
+                }
+                _ => {}
+            }
+        }
+
+        for i in 0..(self.tx_outs.len()) {
+            match self.tx_outs[i].test_match_tx_out(other.tx_outs[i].clone()) {
+                Err(e) => {
+                    return Err(format!("Tx.tx_outs[{}] unmatch. message: {}",i,e));
+                }
+                _ => {}
+            }
+        }
+
+        if self.lock_time != other.lock_time {
+            return Err(format!("Tx.lock_time unmatch. self: {}, other: {}",self.lock_time,other.lock_time));
+        }
+
+        if self.testnet != other.testnet {
+            return Err(format!("Tx.testnet unmatch. self: {}, other: {}",self.testnet, other.testnet));
+        }
+
+        return Ok(());
     }
 }
 

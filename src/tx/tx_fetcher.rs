@@ -40,8 +40,10 @@ impl TxFetcher {
         // もしかしたら64桁詰めいるかもしれないし、いらないかもしれない・・・
         // アクセス先URLでは先頭が0で詰められていたので、0埋め、64桁、右詰めをしている。
         let tx_id_str = format!("{:0>64}", tx_id_str);
+        #[cfg(test)]
         println!("hex: {}", tx_id_str);
         let url = format!("{}/tx/{}/hex", TxFetcher::get_url(testnet), tx_id_str);
+        #[cfg(test)]
         println!("url: {}", url.clone());
         let response = reqwest::blocking::get(url);
         if response.is_err() {

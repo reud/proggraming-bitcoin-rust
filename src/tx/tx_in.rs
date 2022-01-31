@@ -5,7 +5,7 @@ use crate::tx::tx_fetcher::TxFetcher;
 use crate::{u8vec_to_str, TxOut};
 use num_bigint::BigUint;
 use std::fmt;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, format, Formatter};
 use std::io::{Cursor, Read};
 
 #[derive(Debug, Clone)]
@@ -55,10 +55,12 @@ impl TxIn {
         for x in self.prev_transaction_index.to_le_bytes().iter() {
             v.push(*x);
         }
+        #[cfg(test)]
         println!("self.script_sig.serialize() mae tx_in: {}",u8vec_to_str(v.clone()));
         for x in self.script_sig.serialize().iter() {
             v.push(*x);
         }
+        #[cfg(test)]
         println!("self.script_sig.serialize() ato tx_in: {}",u8vec_to_str(v.clone()));
         let sequence = self.sequence.to_le_bytes();
         for x in sequence.iter() {
@@ -103,6 +105,29 @@ impl TxIn {
             script_sig,
             sequence,
         };
+    }
+
+    pub fn test_match_tx_in(&self, other: TxIn) -> Result<(),String> {
+
+        if !cfg!(test) {
+            return Err("TxIn.test_match_tx_in works only in test".to_string());
+        }
+
+        if self.prev_transaction_id != other.prev_transaction_id {
+            return Err(format!("TxIn.prev_transaction_id unmatch. self: {}, other: {}",self.prev_transaction_id,other.prev_transaction_id))
+        }
+
+        if self.prev_transaction_index != other.prev_transaction_index {
+            return Err(format!("TxIn.prev_transaction_index unmatch. self: {}, other: {}",self.prev_transaction_index,other.prev_transaction_index));
+        }
+
+        self.script_sig.test_match_script(other.script_sig)?;
+
+        if self.sequence != other.sequence {
+            return Err(format!("TxIn.sequence unmatch. self: {}, other: {}",self.sequence,other.sequence));
+        }
+
+        return Ok(());
     }
 }
 

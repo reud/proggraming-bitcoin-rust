@@ -12,6 +12,7 @@ use crate::scripts::stack::Stack;
 
 use num_bigint::{BigInt, BigUint};
 use num_traits::{One, Signed, ToPrimitive, Zero};
+use crate::u8vec_to_str;
 
 #[allow(dead_code)]
 #[repr(u8)]
@@ -1200,13 +1201,19 @@ impl Operations {
         let el = stack.pop().unwrap();
         let sz = el.inner_data.len();
         let bytes = &el.inner_data[..(sz - 1)];
-
+        let der_signature = bytes.to_vec();
+        #[cfg(test)]
+        println!("DER_SIG: {}",u8vec_to_str(der_signature.clone()));
+        // ここの実装が怪しい。 Elementとder_signatureが違っていそうなので確認する。
         let point = Secp256k1Point::parse(sec_pubkey.inner_data);
-        let sig = Secp256k1Signature::parse(bytes.to_vec());
-
+        let sig = Secp256k1Signature::parse(der_signature);
         if point.verify(z, sig) {
+            #[cfg(test)]
+            println!("CHECK_SIG: success");
             stack.push(encode_num(BigInt::one()));
         } else {
+            #[cfg(test)]
+            println!("CHECK_SIG: failed");
             stack.push(encode_num(BigInt::zero()));
         }
         return true;

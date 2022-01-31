@@ -57,11 +57,13 @@ impl Secp256k1PrivateKey {
     // zは署名先のハッシュ(p.66)だったりメッセージだったり
     pub fn sign(self, z: Secp256k1ScalarElement) -> Secp256k1Signature {
         let mut generator = thread_rng();
-        let k = if cfg!(tests) {
+        let k = if cfg!(test) {
             BigUint::from_str_radix("83517225909146562989623428579023711666455447161572744791292937142167960758829",10).unwrap()
         } else {
             generator.gen_biguint_below(&(prime() - BigUint::one()))
         };
+        #[cfg(test)]
+        println!("sign k: {}",k.clone());
         let k = new_secp256k1scalarelement(k.clone());
         let r = new_secp256k1point_g()
             .mul_from_sec256k1scalar_element(k.clone())
@@ -71,6 +73,8 @@ impl Secp256k1PrivateKey {
         if s.num > new_secp256k1scalarelement(prime() / BigUint::from_u8(2u8).unwrap()).num {
             s = new_secp256k1scalarelement(prime()) - s;
         }
+        #[cfg(test)]
+        println!("sign r: {}, sign s: {}",r,s);
         return new_secp256k1signature(r, s);
     }
     #[allow(dead_code)]

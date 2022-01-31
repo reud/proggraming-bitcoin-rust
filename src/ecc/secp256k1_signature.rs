@@ -33,6 +33,8 @@ impl Secp256k1Signature {
 
     #[allow(dead_code)]
     pub fn parse(der_signature: Vec<u8>) -> Secp256k1Signature {
+        #[cfg(test)]
+        println!("SIGNATURE PARSE: {}",u8vec_to_str(der_signature.clone()));
         let mut s = Cursor::new(der_signature.clone());
 
         let mut bytes = [0u8; 1];
@@ -80,6 +82,8 @@ impl Secp256k1Signature {
         s.read(&mut *sret);
         let s = BigUint::from_bytes_be(&*sret);
         let s = new_secp256k1scalarelement(s);
+        #[cfg(test)]
+        println!("SIG_PARSE r: {}, s: {}",r.clone(),s.clone());
         return new_secp256k1signature(r, s);
     }
 
@@ -87,6 +91,7 @@ impl Secp256k1Signature {
     pub fn der(self) -> Vec<u8> {
         let prefix_marker = 0x30u8;
         let mut rbin = biguint_to_32_bytes_be(self.clone().r.num).to_vec();
+        #[cfg(test)]
         println!("r: {}",self.r.clone().num.clone());
         rbin = lstip_bytes(rbin, 0);
         if (rbin[0] & 0x80u8) > 0 {

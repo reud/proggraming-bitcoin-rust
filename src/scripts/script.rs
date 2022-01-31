@@ -12,7 +12,7 @@ use crate::scripts::script::Cmd::OperationCode;
 use std::io::{Cursor, Read};
 use std::ops::Add;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Cmd {
     OperationCode(u8),
     Element(Vec<u8>),
@@ -166,6 +166,7 @@ impl Script {
                         Operation::NormalOperation(op) => {
                             let operation_result = op(&mut stack);
                             if !operation_result {
+                                #[cfg(test)]
                                 println!("bad operation. code: {}", code);
                                 return false;
                             }
@@ -173,6 +174,7 @@ impl Script {
                         Operation::AdditionalStackOperation(op) => {
                             let operation_result = op(&mut stack, &mut alt_stack);
                             if !operation_result {
+                                #[cfg(test)]
                                 println!("bad operation. code: {}", code);
                                 return false;
                             }
@@ -180,6 +182,7 @@ impl Script {
                         Operation::AdditionalItemOperation(op) => {
                             let operation_result = op(&mut stack, &mut now_cmds);
                             if !operation_result {
+                                #[cfg(test)]
                                 println!("bad operation. code: {}", code);
                                 return false;
                             }
@@ -188,6 +191,7 @@ impl Script {
                             // let operation_result = op(&mut stack, z.clone());
                             let operation_result = Operations::op_checksig(&mut stack, z.clone());
                             if !operation_result {
+                                #[cfg(test)]
                                 println!("bad operation. code: {}", code);
                                 return false;
                             }
@@ -200,12 +204,35 @@ impl Script {
             }
         }
         if stack.len() == 0 {
+            #[cfg(test)]
+            println!("script failed because stack.len() return zero.");
             return false;
         }
         if stack.pop().unwrap() == new_element() {
+            #[cfg(test)]
+            println!("script failed because top element is empty");
             return false;
         }
         return true;
+    }
+
+    pub fn test_match_script(&self, other: Script) -> Result<(),String> {
+        if cfg!(tests) {
+            return Err("Script.test_match_script works only in test".to_string());
+        }
+
+        if self.cmds.len() != other.cmds.len() {
+            return Err(format!("Script.cmds.len unmatch. self: {}, other: {}",self.cmds.len(),other.cmds.len()));
+        }
+
+        for i in 0..(self.cmds.len()) {
+            if self.cmds[i] != other.cmds[i] {
+                let m = format!("Script.cmds[{}] unmatch. self: {}, others: {}",i,self.cmds[i],other.cmds[i]);
+                return Err(m);
+            }
+        }
+
+        return Ok(());
     }
 }
 
@@ -237,6 +264,20 @@ impl Display for Script {
                 })
                 .collect::<String>()
         )
+    }
+}
+
+impl Display for Cmd {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        return match self {
+            OperationCode(code) => {
+                let name = Operations::code_functions_name(*code);
+                write!(f,"{}", name)
+            }
+            Cmd::Element(el) => {
+                write!(f,"Element<{}>", u8vec_to_str(el.clone()))
+            }
+        }
     }
 }
 
