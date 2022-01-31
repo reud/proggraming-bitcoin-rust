@@ -34,14 +34,14 @@ fn fetch_private_key() -> Secp256k1PrivateKey {
 
 // P148 練習問題4
 #[allow(dead_code)]
-fn broadcast_testnet_transaction_test() {
+fn generate_testnet_transaction_test() {
     // address = "mpw1fSjdDKX6Qs2FAi8Q6Qqm7TKS296sDK";
     let private_key = fetch_private_key();
 
     let my_address = private_key.clone().point.compressed_address(true);
     let target = "mwJn1YPMq7y5F8J3LkC5Hxg9PHyZ5K4cFv";
 
-    let faucet_tx_id = "ae89b93ddf943d5b692181980877c29d248519210a92f4a12c607743e9c6ee31";
+    let faucet_tx_id = "a9fec37e7f852872b89e7a9aa7dae546a28b87173b0ab17eaaa784783f70b625";
     let faucet_tx_id = BigUint::from_str_radix(faucet_tx_id, 16).unwrap();
 
     let send_amount = 4000;
@@ -65,7 +65,7 @@ fn broadcast_testnet_transaction_test() {
         script_pub_key: change_script,
     };
 
-    let txin = TxIn::new(faucet_tx_id, 0);
+    let txin = TxIn::new(faucet_tx_id, 1);
 
     let mut create_tx = Tx::new(
         version,
@@ -85,10 +85,7 @@ fn broadcast_testnet_transaction_test() {
     let script_sig = new_script(vec![Cmd::Element(sig), Cmd::Element(sec)]);
 
     create_tx.tx_ins[0].script_sig = script_sig.clone();
-    println!("create_tx: \n {}", create_tx);
     println!("create_tx_serialized: \n{}", create_tx.serialize_str());
-    // private_key
-    println!("private_key point: \n {}", private_key.clone().point);
 }
 
 // P148 練習問題5
@@ -164,7 +161,7 @@ fn broadcast_testnet_transaction_two_input_test() {
 
 
 fn main() {
-    broadcast_testnet_transaction_two_input_test();
+    generate_testnet_transaction_test();
 }
 
 
