@@ -1,4 +1,4 @@
-use crate::helper::helper::biguint_to_32_bytes_le;
+use crate::helper::helper::{biguint_to_32_bytes_le};
 use crate::scripts::script::Script;
 use crate::tx::tx::Tx;
 use crate::tx::tx_fetcher::TxFetcher;
@@ -7,8 +7,9 @@ use num_bigint::BigUint;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
+
 #[cfg(test)]
-use crate::u8vec_to_str;
+use crate::helper::helper::u8vec_to_str;
 
 #[derive(Debug, Clone)]
 pub struct TxIn {

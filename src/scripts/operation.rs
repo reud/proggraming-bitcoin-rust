@@ -13,7 +13,7 @@ use crate::scripts::stack::Stack;
 use num_bigint::{BigInt, BigUint};
 use num_traits::{One, Signed, ToPrimitive, Zero};
 #[cfg(test)]
-use crate::u8vec_to_str;
+use crate::helper::helper::u8vec_to_str;
 
 
 #[allow(dead_code)]

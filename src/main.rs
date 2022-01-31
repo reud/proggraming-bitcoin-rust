@@ -5,7 +5,7 @@ use crate::ecc::secp256k1_privatekey::{new_secp_256k1privatekey, Secp256k1Privat
 use crate::ecc::secp256k1_scalar_element::{
     new_secp256k1scalarelement,
 };
-use crate::helper::helper::{hash256, u8vec_to_str};
+use crate::helper::helper::{hash256};
 use crate::scripts::script::{
     new_script, new_script_p2pkh_locking, Cmd, Script,
 };
@@ -168,7 +168,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
-    use crate::helper::helper::decode_hex;
+    use crate::helper::helper::{decode_hex, u8vec_to_str};
     use super::*;
     #[test]
     fn generate_testnet_transaction_two_input() {

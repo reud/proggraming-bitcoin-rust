@@ -10,7 +10,7 @@ use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
 
 #[cfg(test)]
-use crate::u8vec_to_str;
+use crate::helper::helper::u8vec_to_str;
 
 #[derive(Clone)]
 pub struct Secp256k1Signature {
