@@ -91,7 +91,7 @@ fn generate_testnet_transaction_test() {
 // P148 練習問題5
 // インプットが2つあるトランザクションの作成
 #[allow(dead_code)]
-fn broadcast_testnet_transaction_two_input_test() {
+fn generate_testnet_transaction_two_input_test() {
     let private_key = fetch_private_key();
 
     let my_address = "mpw1fSjdDKX6Qs2FAi8Q6Qqm7TKS296sDK".to_string();
