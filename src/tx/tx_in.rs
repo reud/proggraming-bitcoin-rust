@@ -55,9 +55,11 @@ impl TxIn {
         for x in self.prev_transaction_index.to_le_bytes().iter() {
             v.push(*x);
         }
+        println!("self.script_sig.serialize() mae tx_in: {}",u8vec_to_str(v.clone()));
         for x in self.script_sig.serialize().iter() {
             v.push(*x);
         }
+        println!("self.script_sig.serialize() ato tx_in: {}",u8vec_to_str(v.clone()));
         let sequence = self.sequence.to_le_bytes();
         for x in sequence.iter() {
             v.push(*x);

@@ -171,3 +171,18 @@ fn broadcast_testnet_transaction_two_input_test() {
 fn main() {
     broadcast_testnet_transaction_two_input_test();
 }
+
+
+#[cfg(test)]
+mod tests {
+    use std::io::Cursor;
+    use super::*;
+    #[test]
+    fn generate_testnet_transaction_two_input() {
+        let expected_tx_str = decode_hex("0100000002c9ee07574a6477248d8dd2436cb2aab39fe004a9bad8530df3a15a60c49599ec010000006a47304402207af5f77e06684c937b513e823518cd545d9cf057be0cf89d015af055c6a4d22302204f18c6a906628a70fe3070a804b878637faab098d2d38474140913518a328ce8012103764e263fa94bb5c54a4898aeb3e22bc025b6c9617f05bda41c9351a874d472ccffffffff178f32985ede440f395c626b14a4474a8d75ecb04aaab45b2a538592afaa0b2e000000006a47304402207af5f77e06684c937b513e823518cd545d9cf057be0cf89d015af055c6a4d223022020f25559aabe32c2b9a20c8d6e82f2db406f0ad628cb69bb457cbbef164e4a0c012103764e263fa94bb5c54a4898aeb3e22bc025b6c9617f05bda41c9351a874d472ccffffffff02204e0000000000001976a9146745ed61a219bc660b8ba7dd7abf2aa3002bd0c688ac50c30000000000001976a914ad346f8eb57dee9a37981716e498120ae80e44f788ac00000000").unwrap();
+        let mut cursor = Cursor::new(s);
+        let expected_tx = Tx::parse(false,&mut cursor);
+
+    }
+
+}

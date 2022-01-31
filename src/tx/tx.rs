@@ -161,6 +161,7 @@ impl Tx {
         result.append(&mut encode_varint(self.clone().tx_ins.len() as u128));
 
         for tx_in in self.clone().tx_ins.clone().iter() {
+            println!("serialize tx_in: {}",u8vec_to_str(tx_in.clone().serialize()));
             result.append(&mut tx_in.clone().serialize());
         }
 

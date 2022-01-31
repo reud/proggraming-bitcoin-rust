@@ -57,7 +57,11 @@ impl Secp256k1PrivateKey {
     // zは署名先のハッシュ(p.66)だったりメッセージだったり
     pub fn sign(self, z: Secp256k1ScalarElement) -> Secp256k1Signature {
         let mut generator = thread_rng();
-        let k = generator.gen_biguint_below(&(prime() - BigUint::one()));
+        let k = if cfg!(tests) {
+            BigUint::from_str_radix("83517225909146562989623428579023711666455447161572744791292937142167960758829",10).unwrap()
+        } else {
+            generator.gen_biguint_below(&(prime() - BigUint::one()))
+        };
         let k = new_secp256k1scalarelement(k.clone());
         let r = new_secp256k1point_g()
             .mul_from_sec256k1scalar_element(k.clone())
