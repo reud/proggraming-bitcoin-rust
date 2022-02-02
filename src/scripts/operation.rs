@@ -1230,6 +1230,7 @@ impl Operations {
     #[allow(dead_code)]
     // z: 署名ハッシュ
     pub fn op_checkmultisig(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
+        // 検証用トランザクションを作る
         if stack.len() < 1 {
             return false;
         }
