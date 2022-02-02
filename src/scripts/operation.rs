@@ -1,4 +1,4 @@
-use crate::ecc::secp256k1_point::Secp256k1Point;
+use crate::ecc::secp256k1_point::{new_secp256k1point_g, Secp256k1Point};
 use crate::ecc::secp256k1_scalar_element::Secp256k1ScalarElement;
 use crate::ecc::secp256k1_signature::Secp256k1Signature;
 use crate::scripts::element::{new_element, new_element_from_bytes, Element};
@@ -1229,8 +1229,63 @@ impl Operations {
 
     #[allow(dead_code)]
     // z: 署名ハッシュ
-    pub fn op_checkmultisig(_stack: &mut Stack<Element>, _z: Secp256k1ScalarElement) -> bool {
-        unimplemented!()
+    pub fn op_checkmultisig(stack: &mut Stack<Element>, z: Secp256k1ScalarElement) -> bool {
+        if stack.len() < 1 {
+            return false;
+        }
+        let n = decode_num(stack.pop().unwrap());
+        if stack.len() < n + 1 {
+            return false;
+        }
+        let mut sec_pubkeys: Vec<Element> = vec![];
+        for _ in 0..n {
+            sec_pubkeys.push(*stack.pop().unwrap());
+        }
+        let m = decode_num(*stack.pop().unwrap());
+        if stack.len() < m + 1 {
+            return false;
+        }
+        let mut der_signatures: Vec<Element> = vec![];
+        for _ in 0..m {
+            let mut el = stack.pop().unwrap();
+            // delete last 1byte
+            el.inner_data.pop().unwrap();
+            der_signatures.push(*el);
+        }
+        // Off-by-one エラーの回避
+        stack.pop();
+        // ここから署名ハッシュのチェック
+        // n個の公開鍵に対してm個の署名に対してチェックを行う。
+        // n個中m個の公開鍵がm個の署名にマッチすればOK
+        // 署名の順序に公開鍵の順序が対応している必要がある。
+        // ref: https://en.bitcoin.it/wiki/Script
+
+        // parse all points
+        let mut points:Vec<Secp256k1Point> = vec![];
+        for sec in sec_pubkeys {
+            points.push(Secp256k1Point::parse(sec.inner_data));
+        }
+        let mut sigs:Vec<Secp256k1Signature> = vec![];
+        for der in der_signatures {
+            sigs.push(Secp256k1Signature::parse(der.inner_data));
+        }
+
+        for sig in sigs {
+            if points.len() == 0 {
+                #[cfg(test)]
+                println!("signatures no good or not in right order");
+                return false;
+            }
+            while points.len() != 0 {
+                // pop top element
+                let point = points.remove(0);
+                if point.verify(z.clone(),sig.clone()) {
+                    break;
+                }
+            }
+            stack.push(encode_num(BigInt::from(1)));
+        }
+        return true;
     }
 
     #[allow(dead_code)]
